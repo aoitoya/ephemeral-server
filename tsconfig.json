@@ -1,8 +1,4 @@
 {
   "extends": "@tsconfig/node22/tsconfig.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "eslint.config.mts", "drizzle.config.ts"]
 }

@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 
-import { db } from '../db'
-import { NewUser, User, users } from '../db/schema'
+import { db } from '../db/index.js'
+import { NewUser, User, users } from '../db/schema.js'
 
 class UserRepository {
   async create(data: NewUser): Promise<User> {

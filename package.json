@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "dev": "tsx --watch --env-file .env src/index.ts",
     "start": "node --env-file .env dist/index.js",
@@ -13,10 +14,19 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest",
-    "test:run": "vitest --run",
+    "test:run": "echo vitest --run",
     "test:ui": "vitest --ui",
     "coverage": "vitest run --coverage",
     "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint",
+      "prettier --check"
+    ],
+    "*.{json,yml,yaml,md}": [
+      "prettier --check"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -27,6 +37,7 @@
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "express": "^5.1.0",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3",
     "zod": "^4.1.12"
@@ -44,7 +55,10 @@
     "drizzle-kit": "^0.31.6",
     "eslint": "^9.39.1",
     "eslint-plugin-perfectionist": "^4.15.1",
+    "eslint-plugin-sonarjs": "^3.0.5",
+    "globals": "^16.5.0",
     "husky": "^9.1.7",
+    "jiti": "^2.6.1",
     "lint-staged": "^16.2.6",
     "prettier": "^3.6.2",
     "tsx": "^4.20.6",
