@@ -1,11 +1,11 @@
 meta {
-  name: create comment
+  name: upvote post
   type: http
-  seq: 5
+  seq: 6
 }
 
 post {
-  url: {{baseurl}}/api/v1/posts/comments
+  url: {{baseurl}}/api/v1/posts/vote
   body: json
   auth: inherit
 }
@@ -13,7 +13,7 @@ post {
 body:json {
   {
     "postId": "bc6ecdb1-d842-4620-8032-110cecc7a27c",
-    "content": "b fsl"
+    "type": "upvote"
   }
 }
 
