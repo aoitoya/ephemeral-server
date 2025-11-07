@@ -1,0 +1,23 @@
+meta {
+  name: create comment
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:3000/api/v1/posts/comments
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "postId": "bc6ecdb1-d842-4620-8032-110cecc7a27c",
+    "content": "b fsl"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
