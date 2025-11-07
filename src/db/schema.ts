@@ -1,5 +1,14 @@
 import { relations, sql } from 'drizzle-orm'
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import {
+  AnyPgColumn,
+  check,
+  integer,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
   createdAt: timestamp('created_at')
@@ -17,56 +26,80 @@ export const posts = pgTable('posts', {
   createdAt: timestamp('created_at')
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),
+  downvotes: integer('downvotes').notNull().default(0),
   id: uuid('id')
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   topics: text('topics').array().notNull(),
+  upvotes: integer('upvotes').notNull().default(0),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
 })
 
-export const comments = pgTable('comments', {
-  content: text('content').notNull(),
-  createdAt: timestamp('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  id: uuid('id')
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  postId: uuid('post_id')
-    .notNull()
-    .references(() => posts.id, { onDelete: 'cascade' }),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-})
+export const comments = pgTable(
+  'comments',
+  {
+    commentId: uuid('comment_id').references((): AnyPgColumn => comments.id, {
+      onDelete: 'cascade',
+    }),
+    content: text('content').notNull(),
+    createdAt: timestamp('created_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    downvotes: integer('downvotes').notNull().default(0),
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    postId: uuid('post_id').references(() => posts.id, { onDelete: 'cascade' }),
+    upvotes: integer('upvotes').notNull().default(0),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    check(
+      'comments_post_xor_comment',
+      sql`((${table.postId} IS NULL) <> (${table.commentId} IS NULL))`
+    ),
+  ]
+)
 
-export const commentReplies = pgTable('comment_replies', {
-  commentId: uuid('comment_id')
-    .notNull()
-    .references(() => comments.id, { onDelete: 'cascade' }),
-  content: text('content').notNull(),
-  createdAt: timestamp('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  id: uuid('id')
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-})
+export const voteTypeEnum = pgEnum('vote_type', ['upvote', 'downvote'])
+
+export const votes = pgTable(
+  'votes',
+  {
+    commentId: uuid('comment_id').references(() => comments.id, {
+      onDelete: 'cascade',
+    }),
+    createdAt: timestamp('created_at')
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    postId: uuid('post_id').references(() => posts.id, { onDelete: 'cascade' }),
+    type: voteTypeEnum('type').notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    check(
+      'votes_post_xor_comment',
+      sql`((${table.postId} IS NULL) <> (${table.commentId} IS NULL))`
+    ),
+  ]
+)
 
 // Relations
 export const userRelations = relations(users, ({ many }) => ({
-  commentReplies: many(commentReplies),
   comments: many(comments),
   posts: many(posts),
 }))
 
 export const postRelations = relations(posts, ({ many, one }) => ({
-  commentReplies: many(commentReplies),
   comments: many(comments),
   user: one(users, {
     fields: [posts.userId],
@@ -75,24 +108,13 @@ export const postRelations = relations(posts, ({ many, one }) => ({
 }))
 
 export const commentRelations = relations(comments, ({ many, one }) => ({
-  commentReplies: many(commentReplies),
+  comments: many(comments),
   post: one(posts, {
     fields: [comments.postId],
     references: [posts.id],
   }),
   user: one(users, {
     fields: [comments.userId],
-    references: [users.id],
-  }),
-}))
-
-export const commentReplyRelations = relations(commentReplies, ({ one }) => ({
-  comment: one(comments, {
-    fields: [commentReplies.commentId],
-    references: [comments.id],
-  }),
-  user: one(users, {
-    fields: [commentReplies.userId],
     references: [users.id],
   }),
 }))

@@ -1,11 +1,23 @@
-import { sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 
 import { db } from '../db/connection.js'
-import { comments, posts } from '../db/schema.js'
+import { comments, posts, votes } from '../db/schema.js'
 
-export interface CreateCommentInput {
+export type CreateCommentInput = {
   content: string
-  postId: string
+  userId: string
+} & (
+  | {
+      commentId: string
+    }
+  | {
+      postId: string
+    }
+)
+
+export interface CreateCommentReplyInput {
+  commentId: string
+  content: string
   userId: string
 }
 
@@ -15,16 +27,21 @@ export interface CreatePostInput {
   userId: string
 }
 
+export type CreateVoteInput = {
+  type: 'downvote' | 'upvote'
+  userId: string
+} & (
+  | {
+      commentId: string
+    }
+  | {
+      postId: string
+    }
+)
+
 class PostService {
   async createComment(input: CreateCommentInput) {
-    const [comment] = await db
-      .insert(comments)
-      .values({
-        content: input.content,
-        postId: input.postId,
-        userId: input.userId,
-      })
-      .returning()
+    const [comment] = await db.insert(comments).values(input).returning()
 
     return comment
   }
@@ -38,12 +55,12 @@ class PostService {
   async getPosts() {
     const rows = await db.execute(sql`
       SELECT
-        to_jsonb(p)                             AS post,
+        to_jsonb(p)                               AS post,
         jsonb_build_object(
           'id', u.id,
           'username', u.username
         ) AS author,
-        COALESCE(c_arr.comments, '[]'::jsonb)   AS comments
+        COALESCE(c_arr.comments, '[]'::jsonb)     AS comments
       FROM posts p
       JOIN users u ON u.id = p.user_id
       LEFT JOIN LATERAL (
@@ -69,6 +86,44 @@ class PostService {
 `)
 
     return rows.rows
+  }
+
+  async vote(input: CreateVoteInput) {
+    return await db.transaction(async (tx) => {
+      const inserted = await tx.insert(votes).values(input).returning()
+
+      if (inserted.length === 0) {
+        throw new Error('Already voted')
+      }
+
+      if ('postId' in input) {
+        const [post] = await tx
+          .update(posts)
+          .set(
+            input.type === 'upvote'
+              ? { upvotes: sql`${posts.upvotes} + 1` }
+              : { downvotes: sql`${posts.downvotes} + 1` }
+          )
+          .where(eq(posts.id, input.postId))
+          .returning()
+
+        return post
+      }
+
+      if ('commentId' in input) {
+        const [comment] = await tx
+          .update(comments)
+          .set(
+            input.type === 'upvote'
+              ? { upvotes: sql`${comments.upvotes} + 1` }
+              : { downvotes: sql`${comments.downvotes} + 1` }
+          )
+          .where(eq(comments.id, input.commentId))
+          .returning()
+
+        return comment
+      }
+    })
   }
 }
 
