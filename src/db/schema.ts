@@ -1,7 +1,10 @@
 import { relations, sql } from 'drizzle-orm'
 import {
   AnyPgColumn,
+  boolean,
+  char,
   check,
+  index,
   integer,
   pgEnum,
   pgTable,
@@ -93,6 +96,25 @@ export const votes = pgTable(
   ]
 )
 
+export const refreshTokens = pgTable(
+  'refresh_tokens',
+  {
+    deviceInfo: text('device_info'),
+    expiresAt: timestamp('expires_at').notNull(),
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    issuedAt: timestamp('issued_at').defaultNow().notNull(),
+    revoked: boolean('revoked').default(false).notNull(),
+    tokenHash: char('token_hash', { length: 64 }).notNull().unique(),
+    userId: uuid('user_id').notNull(),
+  },
+  (table) => [
+    index('idx_refresh_user').on(table.userId),
+    index('idx_refresh_expires').on(table.expiresAt),
+  ]
+)
+
 // Relations
 export const userRelations = relations(users, ({ many }) => ({
   comments: many(comments),
@@ -124,4 +146,5 @@ export type NewPost = Omit<typeof posts.$inferInsert, 'createdAt' | 'id'>
 export type NewUser = Omit<typeof users.$inferInsert, 'createdAt' | 'id'>
 
 export type Post = typeof posts.$inferSelect
+export type RefreshToken = typeof refreshTokens.$inferSelect
 export type User = typeof users.$inferSelect

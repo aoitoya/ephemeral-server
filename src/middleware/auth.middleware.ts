@@ -14,6 +14,13 @@ export const authenticateToken = (
   res: Response,
   next: NextFunction
 ) => {
+  const csrfHeader = req.header('x-xsrf-token')
+  const csrfCookie = req.cookies['XSRF-TOKEN'] as string
+
+  if (!csrfHeader || !csrfCookie || csrfHeader !== csrfCookie) {
+    return res.status(403).json({ error: 'Invalid CSRF token' })
+  }
+
   const authHeader = req.headers.authorization
   const token = authHeader?.split(' ')[1]
 
@@ -21,7 +28,7 @@ export const authenticateToken = (
     return res.status(401).json({ message: 'No token provided' })
   }
 
-  const decoded = jwt.verify(token, env.JWT_SECRET) as { id: string }
+  const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as { id: string }
   req.userId = decoded.id
   next()
 }
