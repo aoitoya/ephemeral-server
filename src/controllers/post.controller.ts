@@ -1,6 +1,5 @@
-import { type Response } from 'express'
+import { type Request, type Response } from 'express'
 
-import type { AuthenticatedRequest } from '../middleware/auth.middleware.js'
 import type {
   CreateCommentInput,
   CreatePostInput,
@@ -16,14 +15,11 @@ class PostController {
     this.postService = new PostService()
   }
 
-  createComment = async (
-    req: AuthenticatedRequest<CreateCommentInput>,
-    res: Response
-  ) => {
-    const { userId } = req
-    const { commentId, content, postId } = req.body
+  createComment = async (req: Request, res: Response) => {
+    const user = req.session.user
+    const { commentId, content, postId } = req.body as CreateCommentInput
 
-    if (!userId) {
+    if (!user) {
       return res.status(401).json({ message: 'No user id found' })
     }
 
@@ -31,7 +27,7 @@ class PostController {
       const comment = await this.postService.createComment({
         content,
         postId,
-        userId,
+        userId: user.id,
       })
 
       return res.status(201).json(comment)
@@ -41,7 +37,7 @@ class PostController {
       const comment = await this.postService.createComment({
         commentId,
         content,
-        userId,
+        userId: user.id,
       })
 
       return res.status(201).json(comment)
@@ -52,30 +48,27 @@ class PostController {
       .json({ message: 'Either commentId or postId must be provided' })
   }
 
-  createPost = async (
-    req: AuthenticatedRequest<CreatePostInput>,
-    res: Response
-  ) => {
-    const { content, topics } = req.body
-    const { userId } = req
+  createPost = async (req: Request, res: Response) => {
+    const { content, topics } = req.body as CreatePostInput
+    const user = req.session.user
 
-    if (!userId) {
+    if (!user) {
       return res.status(401).json({ message: 'No user id found' })
     }
 
     const post = await this.postService.createPost({
       content,
       topics,
-      userId,
+      userId: user.id,
     })
 
     return res.status(201).json(post)
   }
 
-  getPosts = async (req: AuthenticatedRequest, res: Response) => {
-    const { userId } = req
+  getAll = async (req: Request, res: Response) => {
+    const user = req.session.user
 
-    if (!userId) {
+    if (!user) {
       return res.status(401).json({ message: 'No user id found' })
     }
 
@@ -84,21 +77,29 @@ class PostController {
     return res.status(200).json(posts)
   }
 
-  vote = async (req: AuthenticatedRequest<CreateVoteInput>, res: Response) => {
-    const { userId } = req
-    const { commentId, postId, type } = req.body
+  vote = async (req: Request, res: Response) => {
+    const user = req.session.user
+    const { commentId, postId, type } = req.body as CreateVoteInput
 
-    if (!userId) {
+    if (!user) {
       return res.status(401).json({ message: 'No user id found' })
     }
 
     if (commentId) {
-      const post = await this.postService.vote({ commentId, type, userId })
+      const post = await this.postService.vote({
+        commentId,
+        type,
+        userId: user.id,
+      })
       return res.status(200).json(post)
     }
 
     if (postId) {
-      const post = await this.postService.vote({ postId, type, userId })
+      const post = await this.postService.vote({
+        postId,
+        type,
+        userId: user.id,
+      })
       return res.status(200).json(post)
     }
 
