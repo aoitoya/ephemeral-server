@@ -25,6 +25,8 @@ postRouter.post(
   postController.createComment
 )
 
+postRouter.get('/comments', postController.getComments)
+
 postRouter.post(
   '/vote',
   validateRequestBody(createVoteSchema),

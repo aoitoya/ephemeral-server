@@ -72,9 +72,35 @@ class PostController {
       return res.status(401).json({ message: 'No user id found' })
     }
 
-    const posts = await this.postService.getPosts()
+    const posts = await this.postService.getPosts(user.id)
 
     return res.status(200).json(posts)
+  }
+
+  getComments = async (req: Request, res: Response) => {
+    const postId = req.query.postId as string
+    const commentId = req.query.commentId as string
+    const user = req.session.user
+
+    if (!user) {
+      return res.status(401).json({ message: 'No user id found' })
+    }
+
+    if (commentId) {
+      const comments = await this.postService.getCommentReplies(commentId)
+
+      return res.status(200).json(comments)
+    }
+
+    if (postId) {
+      const comments = await this.postService.getComments(postId)
+
+      return res.status(200).json(comments)
+    }
+
+    return res
+      .status(400)
+      .json({ message: 'Either commentId or postId must be provided' })
   }
 
   vote = async (req: Request, res: Response) => {

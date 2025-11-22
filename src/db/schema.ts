@@ -148,3 +148,4 @@ export type NewUser = Omit<typeof users.$inferInsert, 'createdAt' | 'id'>
 export type Post = typeof posts.$inferSelect
 export type RefreshToken = typeof refreshTokens.$inferSelect
 export type User = typeof users.$inferSelect
+export type Vote = typeof votes.$inferSelect
