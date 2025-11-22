@@ -2,6 +2,8 @@ import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express from 'express'
 import helmet from 'helmet'
+import pino from 'pino'
+import { pinoHttp } from 'pino-http'
 
 import { authenticateToken } from './middleware/auth.middleware.js'
 import errorHandler from './middleware/errorHandler.js'
@@ -19,6 +21,7 @@ const corsOptions = {
   origin: ['http://localhost:5173'],
 }
 
+app.use(pinoHttp({ logger: pino({ level: 'info' }) }))
 app.use(cors(corsOptions))
 app.use(
   helmet({
