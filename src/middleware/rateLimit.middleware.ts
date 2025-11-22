@@ -14,7 +14,7 @@ const rateLimitFn = rateLimit as unknown as (
 
 export const globalLimiter = rateLimitFn({
   legacyHeaders: false,
-  max: 100,
+  max: 15000,
   standardHeaders: 'draft-7',
   windowMs: 15 * 60 * 1000,
 })
