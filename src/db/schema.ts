@@ -6,11 +6,13 @@ import {
   check,
   index,
   integer,
+  json,
   pgEnum,
   pgTable,
   text,
   timestamp,
   uuid,
+  varchar,
 } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
@@ -20,6 +22,8 @@ export const users = pgTable('users', {
   id: uuid('id')
     .primaryKey()
     .default(sql`gen_random_uuid()`),
+  isOnline: boolean('is_online'),
+  lastOnline: timestamp('last_online'),
   password: text('password').notNull(),
   username: text('username').notNull(),
 })
@@ -114,6 +118,12 @@ export const refreshTokens = pgTable(
     index('idx_refresh_expires').on(table.expiresAt),
   ]
 )
+
+export const session = pgTable('session', {
+  expire: timestamp('expire'),
+  sess: json('sess'),
+  sid: varchar('sid').primaryKey(),
+})
 
 // Relations
 export const userRelations = relations(users, ({ many }) => ({

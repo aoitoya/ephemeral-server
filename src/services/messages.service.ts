@@ -10,6 +10,7 @@ import {
   socketAuthMiddleware as authMiddleware,
   wrapExpressMiddleware as wrap,
 } from '../middleware/socket.middleware.js'
+import UserRepository from '../repositories/user.repository.js'
 
 type AuthenticatedRequest = Request & {
   session: {
@@ -34,6 +35,11 @@ type Room = z.infer<typeof RoomSchema>
 
 class MessageService {
   private io: Server | undefined
+  private userRepository: UserRepository
+
+  constructor() {
+    this.userRepository = new UserRepository()
+  }
 
   public init(server: HTTPServer) {
     this.io = new Server(server, {
@@ -110,9 +116,19 @@ class MessageService {
       throw new Error('Socket.io instance not initialized')
     }
 
-    this.io.on('connection', (socket: Socket) => {
+    this.io.on('connection', async (socket: Socket) => {
       this.initializeChatHandler(socket)
+      await this.setUserStatus(socket, true)
+
+      socket.on('disconnect', async () => {
+        await this.setUserStatus(socket, false)
+      })
     })
+  }
+
+  private async setUserStatus(socket: Socket, isOneline: boolean) {
+    const user = (socket.request as AuthenticatedRequest).session.user
+    await this.userRepository.setStatus(user.id, isOneline)
   }
 }
 
