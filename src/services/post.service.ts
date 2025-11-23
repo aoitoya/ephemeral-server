@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, sql } from 'drizzle-orm'
 
 import { db } from '../db/connection.js'
 import { comments, posts, users, Vote, votes } from '../db/schema.js'
@@ -59,7 +59,7 @@ class PostService {
       .select()
       .from(comments)
       .where(eq(comments.commentId, commentId))
-      .orderBy(desc(comments.createdAt))
+      .orderBy(asc(comments.createdAt))
       .leftJoin(users, eq(comments.userId, users.id))
       .leftJoin(votes, eq(comments.id, votes.commentId))
 
@@ -87,47 +87,36 @@ class PostService {
   }
 
   async getPosts(currentUserId: string) {
-    const rows = await db.execute(sql`
-    SELECT
-      to_jsonb(p)                               AS post,
-      jsonb_build_object(
-        'id', u.id,
-        'username', u.username
-      ) AS author,
-      COALESCE(c_arr.comments, '[]'::jsonb)     AS comments,
-      v_arr.user_vote                           AS user_vote
-    FROM posts p
-    JOIN users u ON u.id = p.user_id
-    LEFT JOIN LATERAL (
-      SELECT jsonb_agg(to_jsonb(c) ORDER BY c.created_at DESC) AS comments
-      FROM (
-        SELECT
-          c.id,
-          c.content,
-          c.created_at,
-          jsonb_build_object(
-            'id', cu.id,
-            'name', cu.username
-          ) AS author
-        FROM comments c
-        JOIN users cu ON cu.id = c.user_id
-        WHERE c.post_id = p.id
-        ORDER BY c.created_at DESC
-        LIMIT 10
-      ) c
-    ) c_arr ON true
-    LEFT JOIN LATERAL (
-      SELECT v.type::text AS user_vote
-      FROM votes v
-      WHERE v.post_id = p.id
-        AND v.user_id = ${currentUserId}
-      LIMIT 1
-    ) v_arr ON true
-    ORDER BY p.created_at DESC
-    LIMIT 10 OFFSET 0;
-  `)
+    const rows = await db
+      .select({
+        author: {
+          id: users.id,
+          username: users.username,
+        },
+        commentCount: sql<string>`
+        (select count(*) from "comments" c where c."post_id" = ${posts.id})
+        `,
+        content: posts.content,
+        createdAt: posts.createdAt,
+        downvotes: posts.downvotes,
+        id: posts.id,
+        topics: posts.topics,
+        upvotes: posts.upvotes,
+        userId: posts.userId,
+        userVote: sql<null | string>`
+        (select v."type" from "votes" v
+         where v."post_id" = ${posts.id} and v."user_id" = ${currentUserId} limit 1)
+      `,
+      })
+      .from(posts)
+      .leftJoin(users, eq(posts.userId, users.id))
+      .orderBy(desc(posts.createdAt))
+      .limit(10)
 
-    return rows.rows
+    return rows.map((r) => ({
+      ...r,
+      commentCount: Number(r.commentCount) || 0,
+    }))
   }
 
   async vote(input: CreateVoteInput) {
