@@ -17,6 +17,16 @@ class UserRepository {
       .limit(1)
     return result[0] ?? null
   }
+
+  async getAll(): Promise<Omit<User, 'createdAt' | 'password'>[]> {
+    const result = await db
+      .select({
+        id: users.id,
+        username: users.username,
+      })
+      .from(users)
+    return result
+  }
 }
 
 export default UserRepository

@@ -17,6 +17,12 @@ class UserController {
     this.userService = new UserService()
   }
 
+  getAll = async (req: Request, res: Response) => {
+    const users = await this.userService.getAll()
+
+    res.json(users)
+  }
+
   login = async (req: Request<unknown, unknown, LoginUser>, res: Response) => {
     const user = await this.userService.login(req.body)
 

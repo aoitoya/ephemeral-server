@@ -10,6 +10,11 @@ class UserService {
     this.userRepository = new UserRepository()
   }
 
+  async getAll(): Promise<Omit<User, 'createdAt' | 'password'>[]> {
+    const users = await this.userRepository.getAll()
+    return users
+  }
+
   async login(data: LoginUser): Promise<Omit<User, 'password'>> {
     const user = await this.userRepository.findByUsername(data.username)
     if (!user) {
