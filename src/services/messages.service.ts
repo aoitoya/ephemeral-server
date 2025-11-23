@@ -82,11 +82,17 @@ class MessageService {
       }
 
       const user = (socket.request as AuthenticatedRequest).session.user
-      const roomID = this.getRoomID(parsedMsg.data.room, user.id)
-      io.to(roomID).emit('chat:message', {
+      const room = parsedMsg.data.room
+      const roomID = this.getRoomID(room, user.id)
+
+      const message = {
         content: parsedMsg.data.content,
+        createdAt: new Date().toISOString(),
         from: user,
-      })
+        id: Date.now().toString(),
+      }
+
+      io.to(roomID).emit('chat:message', message)
     })
   }
 
