@@ -18,9 +18,14 @@ class UserController {
   }
 
   getAll = async (req: Request, res: Response) => {
+    const user = req.session.user
     const users = await this.userService.getAll()
 
-    res.json(users)
+    res.json(users.filter((u) => u.id !== user?.id))
+  }
+
+  getMe = (req: Request, res: Response) => {
+    res.json(req.session.user)
   }
 
   login = async (req: Request<unknown, unknown, LoginUser>, res: Response) => {

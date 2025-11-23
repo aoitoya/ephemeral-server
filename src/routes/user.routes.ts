@@ -12,5 +12,6 @@ userRouter.post('/login', authLimiter, userController.login)
 userRouter.post('/refresh-token', authLimiter, userController.refreshToken)
 
 userRouter.get('/', authenticateToken, userController.getAll)
+userRouter.get('/me', authenticateToken, userController.getMe)
 
 export default userRouter
