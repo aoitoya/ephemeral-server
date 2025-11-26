@@ -111,7 +111,41 @@ class UserController {
 
   register = async (req: Request<unknown, unknown, NewUser>, res: Response) => {
     const user = await this.userService.register(req.body)
-    res.status(201).json(user)
+
+    req.session.user = { id: user.id, username: user.username }
+
+    const accessToken = generateAccessToken({
+      id: user.id,
+    })
+    const refreshToken = generateRefreshToken()
+    const expiresAt = new Date(Date.now() + env.REFRESH_EXPIRES_IN * 1000)
+
+    await tokenRepository.save(
+      user.id,
+      refreshToken,
+      expiresAt,
+      req.get('user-agent')
+    )
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      maxAge: env.REFRESH_EXPIRES_IN * 1000,
+      sameSite: 'strict',
+      secure: env.NODE_ENV === 'production',
+    })
+
+    res.cookie('XSRF-TOKEN', generateCsrfToken(), {
+      httpOnly: false,
+      maxAge: env.REFRESH_EXPIRES_IN * 1000,
+      sameSite: 'strict',
+      secure: env.NODE_ENV === 'production',
+    })
+
+    res.status(200).json({
+      ...user,
+      expiresAt: Date.now() + env.JWT_ACCESS_EXPIRES_IN * 1000,
+      token: accessToken,
+    })
   }
 }
 

@@ -25,7 +25,37 @@ export const users = pgTable('users', {
   isOnline: boolean('is_online'),
   lastOnline: timestamp('last_online'),
   password: text('password').notNull(),
-  username: text('username').notNull(),
+  username: text('username').unique().notNull(),
+})
+
+const connectionStatusTypeEnum = pgEnum('connection_status', [
+  'pending',
+  'active',
+  'blocked',
+  'cancelled',
+])
+
+export const connections = pgTable('connections', {
+  acceptedAt: timestamp('accepted_at'),
+  blockedBy: uuid('blocked_by').references(() => users.id, {
+    onDelete: 'cascade',
+  }),
+  createdAt: timestamp('created_at')
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  id: uuid('id')
+    .default(sql`gen_random_uuid()`)
+    .primaryKey(),
+  requestedBy: uuid('requested_by')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  status: connectionStatusTypeEnum('status').notNull().default('pending'),
+  userA: uuid('user_a')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  userB: uuid('user_b')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
 })
 
 export const posts = pgTable('posts', {
