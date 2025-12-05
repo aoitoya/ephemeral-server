@@ -28,11 +28,12 @@ export const users = pgTable('users', {
   username: text('username').unique().notNull(),
 })
 
-const connectionStatusTypeEnum = pgEnum('connection_status', [
+export const connectionStatusTypeEnum = pgEnum('connection_status', [
   'pending',
   'active',
   'blocked',
   'cancelled',
+  'rejected',
 ])
 
 export const connections = pgTable('connections', {
@@ -49,7 +50,10 @@ export const connections = pgTable('connections', {
   requestedBy: uuid('requested_by')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  status: connectionStatusTypeEnum('status').notNull().default('pending'),
+  status: connectionStatusTypeEnum('status')
+    .notNull()
+    .default(sql`'pending'::connection_status`),
+
   userA: uuid('user_a')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
@@ -181,10 +185,12 @@ export const commentRelations = relations(comments, ({ many, one }) => ({
   }),
 }))
 
+export type Connection = typeof connections.$inferSelect
 export type LoginUser = Pick<User, 'password' | 'username'>
+export type NewConnection = typeof connections.$inferInsert
 export type NewPost = Omit<typeof posts.$inferInsert, 'createdAt' | 'id'>
-export type NewUser = Omit<typeof users.$inferInsert, 'createdAt' | 'id'>
 
+export type NewUser = Omit<typeof users.$inferInsert, 'createdAt' | 'id'>
 export type Post = typeof posts.$inferSelect
 export type RefreshToken = typeof refreshTokens.$inferSelect
 export type User = typeof users.$inferSelect

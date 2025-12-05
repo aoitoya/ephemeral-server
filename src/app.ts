@@ -9,6 +9,7 @@ import { authenticateToken } from './middleware/auth.middleware.js'
 import errorHandler from './middleware/errorHandler.js'
 import { globalLimiter } from './middleware/rateLimit.middleware.js'
 import { sessionMiddleware } from './middleware/session.middleware.js'
+import connectionRouter from './routes/connection.routes.js'
 import postRouter from './routes/post.routes.js'
 import userRouter from './routes/user.routes.js'
 
@@ -41,6 +42,7 @@ app.use(cookieParser())
 
 app.use('/api/v1/users', userRouter)
 app.use('/api/v1/posts', authenticateToken, postRouter)
+app.use('/api/v1/connections', authenticateToken, connectionRouter)
 
 app.use(errorHandler)
 
