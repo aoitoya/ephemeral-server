@@ -106,6 +106,26 @@ export const comments = pgTable(
   ]
 )
 
+export const chatMessages = pgTable('chat_messages', {
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at')
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  id: uuid('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  recipentId: uuid('recipent_id')
+    .notNull()
+    .references(() => users.id, {
+      onDelete: 'cascade',
+    }),
+  senderId: uuid('sender_id')
+    .notNull()
+    .references(() => users.id, {
+      onDelete: 'cascade',
+    }),
+})
+
 export const voteTypeEnum = pgEnum('vote_type', ['upvote', 'downvote'])
 
 export const votes = pgTable(
@@ -185,11 +205,12 @@ export const commentRelations = relations(comments, ({ many, one }) => ({
   }),
 }))
 
+export type ChatMessage = typeof chatMessages.$inferSelect
 export type Connection = typeof connections.$inferSelect
 export type LoginUser = Pick<User, 'password' | 'username'>
+export type NewChatMessage = typeof chatMessages.$inferInsert
 export type NewConnection = typeof connections.$inferInsert
 export type NewPost = Omit<typeof posts.$inferInsert, 'createdAt' | 'id'>
-
 export type NewUser = Omit<typeof users.$inferInsert, 'createdAt' | 'id'>
 export type Post = typeof posts.$inferSelect
 export type RefreshToken = typeof refreshTokens.$inferSelect
