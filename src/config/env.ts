@@ -4,6 +4,7 @@ import z from 'zod'
 dotenv.config({ quiet: true })
 
 const defaultEnv = {
+  BCRYPT_ROUNDS: 10,
   DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/postgres',
   JWT_ACCESS_EXPIRES_IN: '3600',
   JWT_ACCESS_SECRET: 'dev_jwt_access_secret',
@@ -15,6 +16,7 @@ const defaultEnv = {
 
 const envSchema = z
   .object({
+    BCRYPT_ROUNDS: z.number().default(defaultEnv.BCRYPT_ROUNDS),
     DATABASE_URL: z.string().default(defaultEnv.DATABASE_URL),
     JWT_ACCESS_EXPIRES_IN: z
       .string()

@@ -5,6 +5,7 @@ import helmet from 'helmet'
 import pino from 'pino'
 import { pinoHttp } from 'pino-http'
 
+import env from './config/env.js'
 import { authenticateToken } from './middleware/auth.middleware.js'
 import errorHandler from './middleware/errorHandler.js'
 import { globalLimiter } from './middleware/rateLimit.middleware.js'
@@ -22,7 +23,25 @@ const corsOptions = {
   origin: ['http://localhost:5173'],
 }
 
-app.use(pinoHttp({ logger: pino({ level: 'info' }) }))
+app.use(
+  pinoHttp({
+    logger: pino({
+      formatters: {
+        log: (obj) => ({
+          req: obj.req,
+        }),
+      },
+      redact: ['req.headers'],
+      transport:
+        env.NODE_ENV === 'development'
+          ? {
+              target: 'pino-pretty',
+            }
+          : undefined,
+    }),
+  })
+)
+
 app.use(cors(corsOptions))
 app.use(
   helmet({

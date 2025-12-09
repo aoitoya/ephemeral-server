@@ -1,4 +1,6 @@
-/* eslint-disable sonarjs/no-hardcoded-passwords */
+import bcrypt from 'bcryptjs'
+
+import env from '../config/env.js'
 import logger from '../config/logger.js'
 import { db } from './connection.js'
 import { NewPost, NewUser } from './schema.js'
@@ -7,17 +9,19 @@ import { posts as postsTable, users as usersTable } from './schema.js'
 async function seed() {
   logger.info('Starting database seeding...')
 
+  const password = await bcrypt.hash('password', env.BCRYPT_ROUNDS)
+
   const users: NewUser[] = [
     {
-      password: 'password',
+      password,
       username: 'james',
     },
     {
-      password: 'password',
+      password,
       username: 'jane',
     },
     {
-      password: 'password',
+      password,
       username: 'richard',
     },
   ]

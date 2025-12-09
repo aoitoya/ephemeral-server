@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs'
 
+import env from '../config/env.js'
 import { type LoginUser, type NewUser, type User } from '../db/schema.js'
 import UserRepository from '../repositories/user.repository.js'
 
@@ -30,7 +31,7 @@ class UserService {
   }
 
   async register(data: NewUser): Promise<Omit<User, 'password'>> {
-    const hashedPassword = await bcrypt.hash(data.password, 10)
+    const hashedPassword = await bcrypt.hash(data.password, env.BCRYPT_ROUNDS)
     const user = await this.userRepository.create({
       ...data,
       password: hashedPassword,
