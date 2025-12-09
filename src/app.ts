@@ -41,7 +41,7 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.use('/api/v1/users', userRouter)
-app.use('/api/v1/posts', authenticateToken, postRouter)
+app.use('/api/v1/posts', postRouter)
 app.use('/api/v1/connections', authenticateToken, connectionRouter)
 
 app.use(errorHandler)
