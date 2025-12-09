@@ -1,5 +1,4 @@
 import type { Request } from 'express'
-import type { Server as HTTPServer } from 'node:http'
 import type { Socket } from 'socket.io'
 
 import { Server } from 'socket.io'
@@ -13,6 +12,7 @@ import {
 import { ChatMessageRepository } from '../repositories/chatMessage.repository.js'
 import UserRepository from '../repositories/user.repository.js'
 import { ConnectionService } from '../services/connection.service.js'
+import { getIO } from './socket.js'
 
 type AuthenticatedRequest = Request & {
   session: {
@@ -38,24 +38,17 @@ type Room = z.infer<typeof RoomSchema>
 class MessageService {
   private chatMessageRepository: ChatMessageRepository
   private connectionService: ConnectionService
-  private io: Server | undefined
+  private io: null | Server
   private userRepository: UserRepository
 
   constructor() {
     this.connectionService = new ConnectionService()
     this.userRepository = new UserRepository()
     this.chatMessageRepository = new ChatMessageRepository()
+    this.io = getIO()
   }
 
-  public init(server: HTTPServer) {
-    this.io = new Server(server, {
-      cors: {
-        allowedHeaders: ['Content-Type', 'Authorization', 'x-xsrf-token'],
-        credentials: true,
-        methods: ['GET', 'POST', 'OPTIONS'],
-        origin: ['http://localhost:5173'],
-      },
-    })
+  public init() {
     this.initializeSessionMiddleware()
     this.initializeSocketEvents()
   }
@@ -198,6 +191,4 @@ class MessageService {
   }
 }
 
-const messageService = new MessageService()
-
-export default messageService
+export default MessageService
