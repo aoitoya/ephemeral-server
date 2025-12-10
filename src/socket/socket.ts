@@ -3,6 +3,8 @@ import { Server } from 'socket.io'
 
 let io: null | Server = null
 
+export const userSocketMap = new Map<string, string>()
+
 export function getIO(): Server {
   if (!io) {
     throw new Error('SocketService not initialized')

@@ -10,8 +10,8 @@ const PORT = env.PORT
 
 const server = createServer(app)
 
-socket.init(server)
-const messageService = new MessageService()
+const io = socket.init(server)
+const messageService = new MessageService(io)
 messageService.init()
 
 server.listen(PORT, () => {

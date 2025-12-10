@@ -12,7 +12,7 @@ import {
 import { ChatMessageRepository } from '../repositories/chatMessage.repository.js'
 import UserRepository from '../repositories/user.repository.js'
 import { ConnectionService } from '../services/connection.service.js'
-import { getIO } from './socket.js'
+import { userSocketMap } from './socket.js'
 
 type AuthenticatedRequest = Request & {
   session: {
@@ -38,14 +38,14 @@ type Room = z.infer<typeof RoomSchema>
 class MessageService {
   private chatMessageRepository: ChatMessageRepository
   private connectionService: ConnectionService
-  private io: null | Server
+  private io: Server
   private userRepository: UserRepository
 
-  constructor() {
+  constructor(io: Server) {
     this.connectionService = new ConnectionService()
     this.userRepository = new UserRepository()
     this.chatMessageRepository = new ChatMessageRepository()
-    this.io = getIO()
+    this.io = io
   }
 
   public init() {
@@ -54,39 +54,21 @@ class MessageService {
   }
 
   private async broadcastActiveUsers(socket: Socket) {
-    const io = this.io
-    if (!io) {
-      throw new Error('Socket.io instance not initialized')
-    }
-
     const currentUser = (socket.request as AuthenticatedRequest).session.user
 
-    // Get all active connections for this user
-    const connections = await this.connectionService.getConnections(
-      currentUser.id,
-      'active'
+    const connections = await this.connectionService.getOnlineConnections(
+      currentUser.id
     )
 
-    // Get all online users
-    const allUsers = await this.userRepository.getAll()
-    const onlineUsers = allUsers.filter((u) => u.isOnline)
-
-    // Broadcast to each connected user's room
     for (const connection of connections) {
-      const roomID = this.getRoomID(
-        { id: connection.user.id, type: 'single' },
-        currentUser.id
-      )
-      io.to(roomID).emit('users:active', {
-        onlineUsers: onlineUsers.map(
-          ({ id, isOnline, lastOnline, username }) => ({
-            id,
-            isOnline,
-            lastOnline,
-            username,
-          })
-        ),
-      })
+      const roomId = userSocketMap.get(connection.id)
+
+      if (roomId) {
+        this.io.to(roomId).emit('user:active', {
+          id: connection.id,
+          username: connection.username,
+        })
+      }
     }
   }
 
@@ -99,11 +81,6 @@ class MessageService {
   }
 
   private initializeChatHandler(socket: Socket) {
-    const io = this.io
-    if (!io) {
-      throw new Error('Socket.io instance not initialized')
-    }
-
     socket.on('chat:join', async (data) => {
       const parsedRoom = RoomSchema.safeParse(data)
       if (!parsedRoom.success) {
@@ -152,24 +129,16 @@ class MessageService {
         senderId: user.id,
       })
 
-      io.to(roomID).emit('chat:message', message)
+      this.io.to(roomID).emit('chat:message', message)
     })
   }
 
   private initializeSessionMiddleware() {
-    if (!this.io) {
-      throw new Error('Socket.io instance not initialized')
-    }
-
     this.io.use(wrap(sessionMiddleware))
     this.io.use(authMiddleware)
   }
 
   private initializeSocketEvents() {
-    if (!this.io) {
-      throw new Error('Socket.io instance not initialized')
-    }
-
     this.io.on('connection', async (socket: Socket) => {
       this.initializeChatHandler(socket)
       await this.setUserStatus(socket, true)
@@ -187,6 +156,7 @@ class MessageService {
 
   private async setUserStatus(socket: Socket, isOneline: boolean) {
     const user = (socket.request as AuthenticatedRequest).session.user
+    userSocketMap.set(user.id, socket.id)
     await this.userRepository.setStatus(user.id, isOneline)
   }
 }
