@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 
-import { ConnectionService } from '../services/connection.service.js'
-import { GetConnectionsQuery } from '../validations/connection.validation.js'
+import { ConnectionService } from './connection.service.js'
+import { GetConnectionsQuery } from './connection.validation.js'
 
 class ConnectionController {
   private connectionService: ConnectionService

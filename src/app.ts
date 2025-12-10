@@ -10,9 +10,9 @@ import { authenticateToken } from './middleware/auth.middleware.js'
 import errorHandler from './middleware/errorHandler.js'
 import { globalLimiter } from './middleware/rateLimit.middleware.js'
 import { sessionMiddleware } from './middleware/session.middleware.js'
-import connectionRouter from './routes/connection.routes.js'
-import postRouter from './routes/post.routes.js'
-import userRouter from './routes/user.routes.js'
+import connectionRouter from './modules/connections/connection.routes.js'
+import postRouter from './modules/posts/post.routes.js'
+import userRouter from './modules/users/user.routes.js'
 
 const app = express()
 

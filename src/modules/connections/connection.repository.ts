@@ -1,8 +1,13 @@
 import { and, eq, ne, or } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 
-import { db } from '../db/connection.js'
-import { Connection, connections, NewConnection, users } from '../db/schema.js'
+import { db } from '../../db/connection.js'
+import {
+  Connection,
+  connections,
+  NewConnection,
+  users,
+} from '../../db/schema.js'
 
 export class ConnectionRepository {
   async acceptConnection(connectionId: string) {

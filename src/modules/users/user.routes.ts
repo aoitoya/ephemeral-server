@@ -1,8 +1,8 @@
 import { Router } from 'express'
 
-import UserController from '../controllers/user.controller.js'
-import { authenticateToken } from '../middleware/auth.middleware.js'
-import { authLimiter } from '../middleware/rateLimit.middleware.js'
+import { authenticateToken } from '../../middleware/auth.middleware.js'
+import { authLimiter } from '../../middleware/rateLimit.middleware.js'
+import UserController from './user.controller.js'
 
 const userRouter = Router()
 const userController = new UserController()

@@ -1,5 +1,5 @@
-import { Connection } from '../db/schema.js'
-import { ConnectionRepository } from '../repositories/connection.repository.js'
+import { Connection } from '../../db/schema.js'
+import { ConnectionRepository } from './connection.repository.js'
 
 export class ConnectionService {
   private connectionRepository: ConnectionRepository

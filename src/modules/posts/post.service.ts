@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, sql } from 'drizzle-orm'
 
-import { db } from '../db/connection.js'
-import { comments, posts, users, Vote, votes } from '../db/schema.js'
+import { db } from '../../db/connection.js'
+import { comments, posts, users, Vote, votes } from '../../db/schema.js'
 
 export type CreateCommentInput = {
   content: string

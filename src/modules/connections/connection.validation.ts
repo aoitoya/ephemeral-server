@@ -1,6 +1,6 @@
 import z from 'zod'
 
-import { connections } from '../db/schema.js'
+import { connections } from '../../db/schema.js'
 
 export const requestConnectionSchema = z.object({
   recipientId: z.string(),

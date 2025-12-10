@@ -1,14 +1,14 @@
 import { Request, Response } from 'express'
 
-import env from '../config/env.js'
-import { type LoginUser, type NewUser } from '../db/schema.js'
-import tokenRepository from '../repositories/token.repository.js'
-import UserService from '../services/user.service.js'
+import env from '../../config/env.js'
+import { type LoginUser, type NewUser } from '../../db/schema.js'
+import tokenRepository from '../../repositories/token.repository.js'
 import {
   generateAccessToken,
   generateCsrfToken,
   generateRefreshToken,
-} from '../utils/token.js'
+} from '../../utils/token.js'
+import UserService from './user.service.js'
 
 class UserController {
   private userService: UserService

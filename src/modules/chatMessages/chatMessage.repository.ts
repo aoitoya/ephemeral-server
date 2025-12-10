@@ -1,7 +1,7 @@
 import { and, eq, or } from 'drizzle-orm'
 
-import { db } from '../db/connection.js'
-import { chatMessages, NewChatMessage, users } from '../db/schema.js'
+import { db } from '../../db/connection.js'
+import { chatMessages, NewChatMessage, users } from '../../db/schema.js'
 
 export class ChatMessageRepository {
   async addMessage(params: NewChatMessage) {

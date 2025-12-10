@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs'
 
-import env from '../config/env.js'
-import { type LoginUser, type NewUser, type User } from '../db/schema.js'
-import UserRepository from '../repositories/user.repository.js'
+import env from '../../config/env.js'
+import { type LoginUser, type NewUser, type User } from '../../db/schema.js'
+import UserRepository from './user.repository.js'
 
 class UserService {
   private userRepository: UserRepository

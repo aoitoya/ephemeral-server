@@ -4,15 +4,15 @@ import type { Socket } from 'socket.io'
 import { Server } from 'socket.io'
 import { z } from 'zod'
 
-import { sessionMiddleware } from '../middleware/session.middleware.js'
+import { sessionMiddleware } from '../../middleware/session.middleware.js'
 import {
   socketAuthMiddleware as authMiddleware,
   wrapExpressMiddleware as wrap,
-} from '../middleware/socket.middleware.js'
-import { ChatMessageRepository } from '../repositories/chatMessage.repository.js'
-import UserRepository from '../repositories/user.repository.js'
-import { ConnectionService } from '../services/connection.service.js'
-import { userSocketMap } from './socket.js'
+} from '../../middleware/socket.middleware.js'
+import { userSocketMap } from '../../socket/socket.js'
+import { ConnectionService } from '../connections/connection.service.js'
+import UserRepository from '../users/user.repository.js'
+import { ChatMessageRepository } from './chatMessage.repository.js'
 
 type AuthenticatedRequest = Request & {
   session: {

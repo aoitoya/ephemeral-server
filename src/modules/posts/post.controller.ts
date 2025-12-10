@@ -4,9 +4,9 @@ import type {
   CreateCommentInput,
   CreatePostInput,
   CreateVoteInput,
-} from '../validations/post.validation.js'
+} from './post.validation.js'
 
-import PostService from '../services/post.service.js'
+import PostService from './post.service.js'
 
 class PostController {
   private readonly postService: PostService

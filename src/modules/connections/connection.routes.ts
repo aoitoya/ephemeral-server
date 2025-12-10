@@ -1,11 +1,11 @@
 import { Router } from 'express'
 
-import ConnectionController from '../controllers/connection.controller.js'
-import { validateRequestBody } from '../middleware/validate.middleware.js'
+import { validateRequestBody } from '../../middleware/validate.middleware.js'
+import ConnectionController from '../../modules/connections/connection.controller.js'
 import {
   actionConnectionSchema,
   requestConnectionSchema,
-} from '../validations/connection.validation.js'
+} from './connection.validation.js'
 
 const connectionRouter = Router()
 const connectionController = new ConnectionController()

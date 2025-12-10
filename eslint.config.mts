@@ -8,7 +8,7 @@ import tseslint from 'typescript-eslint'
 export default defineConfig([
   {
     extends: ['js/recommended'],
-    files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
+    files: ['**/*.{ts,mts,cts}'],
     languageOptions: { globals: globals.node },
     plugins: { js },
   },
@@ -18,7 +18,9 @@ export default defineConfig([
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ['drizzle.config.ts'],
+        },
       },
     },
   },

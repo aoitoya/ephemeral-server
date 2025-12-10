@@ -1,13 +1,13 @@
 import { Router } from 'express'
 
-import PostController from '../controllers/post.controller.js'
-import { authenticateToken } from '../middleware/auth.middleware.js'
-import { validateRequestBody } from '../middleware/validate.middleware.js'
+import { authenticateToken } from '../../middleware/auth.middleware.js'
+import { validateRequestBody } from '../../middleware/validate.middleware.js'
+import PostController from './post.controller.js'
 import {
   createCommentSchema,
   createPostSchema,
   createVoteSchema,
-} from '../validations/post.validation.js'
+} from './post.validation.js'
 
 const postRouter = Router()
 const postController = new PostController()
