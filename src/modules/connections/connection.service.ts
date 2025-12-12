@@ -1,4 +1,5 @@
 import { Connection } from '../../db/schema.js'
+import { notificationService } from '../../index.js'
 import { ConnectionRepository } from './connection.repository.js'
 
 export class ConnectionService {
@@ -46,10 +47,13 @@ export class ConnectionService {
     })
   }
 
-  async requestConnection(requestedBy: string, targetUserId: string) {
+  async requestConnection(
+    targetUserId: string,
+    actorUser: { id: string; username: string }
+  ) {
     const existingConnection =
       await this.connectionRepository.findConnectionBetweenUsers(
-        requestedBy,
+        actorUser.id,
         targetUserId
       )
 
@@ -59,7 +63,7 @@ export class ConnectionService {
           existingConnection.id,
           {
             blockedBy: null,
-            requestedBy: requestedBy,
+            requestedBy: actorUser.id,
             status: 'pending',
           }
         )
@@ -68,12 +72,16 @@ export class ConnectionService {
       return existingConnection
     }
 
-    return await this.connectionRepository.createConnection({
-      requestedBy,
+    const conn = await this.connectionRepository.createConnection({
+      requestedBy: actorUser.id,
       status: 'pending',
-      userA: requestedBy,
+      userA: actorUser.id,
       userB: targetUserId,
     })
+
+    await notificationService.sendConnectionReqReceived(targetUserId, actorUser)
+
+    return conn
   }
 
   async respondToConnectionRequest(

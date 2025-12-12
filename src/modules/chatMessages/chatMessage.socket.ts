@@ -156,6 +156,7 @@ class MessageService {
 
   private async setUserStatus(socket: Socket, isOneline: boolean) {
     const user = (socket.request as AuthenticatedRequest).session.user
+
     userSocketMap.set(user.id, socket.id)
     await this.userRepository.setStatus(user.id, isOneline)
   }

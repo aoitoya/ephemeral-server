@@ -12,8 +12,16 @@ post {
 
 body:json {
   {
-    "username": "john",
-    "password": "12345678"
+    "username": "james",
+    "password": "password"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    bru.setEnvVar('auth_token', res.body.token)
+  } else {
+    bru.setEnvVar('auth_token', res.status)
   }
 }
 

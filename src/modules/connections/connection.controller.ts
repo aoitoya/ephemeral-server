@@ -88,7 +88,7 @@ class ConnectionController {
       return res.status(401).json({ message: 'Unauthorized' })
     }
 
-    await this.connectionService.requestConnection(currentUser.id, recipientId)
+    await this.connectionService.requestConnection(recipientId, currentUser)
 
     res.status(201).json({ message: 'Connection request sent' })
   }

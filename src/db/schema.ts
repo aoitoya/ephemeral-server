@@ -126,6 +126,27 @@ export const chatMessages = pgTable('chat_messages', {
     }),
 })
 
+export const notificationTypeEnum = pgEnum('notification_type', [
+  'connection:new-req',
+  'connection:req-approved',
+])
+export const notifications = pgTable('notifications', {
+  actorId: uuid('actor_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at')
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  id: uuid('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  isRead: boolean('is_read').notNull().default(false),
+  type: notificationTypeEnum('type').notNull(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+})
+
 export const voteTypeEnum = pgEnum('vote_type', ['upvote', 'downvote'])
 
 export const votes = pgTable(
