@@ -1,7 +1,15 @@
-import { and, asc, desc, eq, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, sql } from 'drizzle-orm'
 
 import { db } from '../../db/connection.js'
-import { comments, posts, users, Vote, votes } from '../../db/schema.js'
+import {
+  comments,
+  engagementHourly,
+  pEngagementCache,
+  posts,
+  users,
+  Vote,
+  votes,
+} from '../../db/schema.js'
 
 export type CreateCommentInput = {
   content: string
@@ -43,7 +51,19 @@ type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
 class PostService {
   async createComment(input: CreateCommentInput) {
-    const [comment] = await db.insert(comments).values(input).returning()
+    const comment = await db.transaction(async (tx) => {
+      const [created] = await tx.insert(comments).values(input).returning()
+
+      if ('postId' in input) {
+        await this.updateHourlyEngagement({
+          postId: input.postId,
+          tx,
+          type: 'comment',
+        })
+      }
+
+      return created
+    })
 
     return comment
   }
@@ -87,36 +107,53 @@ class PostService {
   }
 
   async getPosts(currentUserId: string) {
-    const rows = await db
+    const commentCounts = db.$with('comment_counts').as(
+      db
+        .select({
+          count: count().as('count'),
+          postId: comments.postId,
+        })
+        .from(comments)
+        .groupBy(comments.postId)
+    )
+
+    const feedScore = sql<number>`(
+    COALESCE(${pEngagementCache.currentVelocity}, 1)
+    * EXP(
+        -EXTRACT(EPOCH FROM (NOW() - ${posts.createdAt})) / 3600.0 / 6.0
+      )
+    * LN(GREATEST(${posts.upvotes} + 1, 1))
+  )`.as('feed_score')
+
+    const query = db
+      .with(commentCounts)
       .select({
         author: {
           id: users.id,
           username: users.username,
         },
-        commentCount: sql<string>`
-        (select count(*) from "comments" c where c."post_id" = ${posts.id})
-        `,
+        commentCount: sql<number>`COALESCE(${commentCounts.count}, 0)`,
         content: posts.content,
         createdAt: posts.createdAt,
         downvotes: posts.downvotes,
+        feedScore: feedScore,
         id: posts.id,
         topics: posts.topics,
         upvotes: posts.upvotes,
         userId: posts.userId,
-        userVote: sql<null | string>`
-        (select v."type" from "votes" v
-         where v."post_id" = ${posts.id} and v."user_id" = ${currentUserId} limit 1)
-      `,
+        userVote: votes.type,
       })
       .from(posts)
+      .leftJoin(pEngagementCache, eq(pEngagementCache.postId, posts.id))
+      .leftJoin(commentCounts, eq(commentCounts.postId, posts.id))
       .leftJoin(users, eq(posts.userId, users.id))
-      .orderBy(desc(posts.createdAt))
-      .limit(10)
+      .leftJoin(
+        votes,
+        and(eq(votes.postId, posts.id), eq(votes.userId, currentUserId))
+      )
+      .orderBy(desc(feedScore))
 
-    return rows.map((r) => ({
-      ...r,
-      commentCount: Number(r.commentCount) || 0,
-    }))
+    return await query
   }
 
   async vote(input: CreateVoteInput) {
@@ -164,6 +201,10 @@ class PostService {
       .where(eq(table.id, id))
       .returning()
 
+    if (isPostVote) {
+      await this.updateHourlyEngagement({ postId: id, tx, type })
+    }
+
     return result
   }
 
@@ -185,6 +226,10 @@ class PostService {
       .set({ [column]: sql`${table[column]} - 1` })
       .where(eq(table.id, id))
       .returning()
+
+    if (isPostVote) {
+      await this.updateHourlyEngagement({ postId: id, tx, type: `-${type}` })
+    }
 
     return result
   }
@@ -212,7 +257,63 @@ class PostService {
       .where(eq(table.id, id))
       .returning()
 
+    if (isPostVote) {
+      // Remove old vote engagement and add new vote engagement
+      await this.updateHourlyEngagement({
+        postId: id,
+        tx,
+        type: `-${existingVote.type}`,
+      })
+      await this.updateHourlyEngagement({ postId: id, tx, type })
+    }
+
     return result
+  }
+
+  private async updateHourlyEngagement({
+    postId,
+    tx,
+    type,
+  }: {
+    postId: string
+    tx?: Transaction
+    type:
+      | '-comment'
+      | '-downvote'
+      | '-upvote'
+      | 'comment'
+      | 'downvote'
+      | 'upvote'
+  }) {
+    const WEIGHT = {
+      '-comment': -2,
+      '-downvote': 4,
+      '-upvote': -3,
+      comment: 2,
+      downvote: -4,
+      upvote: 3,
+    }
+
+    await (tx ?? db)
+      .insert(engagementHourly)
+      .values({
+        hour: sql`date_trunc('hour', now())`,
+        postId,
+        score: WEIGHT[type],
+      })
+      .onConflictDoUpdate({
+        set: {
+          score: sql`${engagementHourly.score} + excluded.score`,
+        },
+        target: [engagementHourly.postId, engagementHourly.hour],
+      })
+
+    await (tx ?? db)
+      .update(pEngagementCache)
+      .set({
+        nextUpdate: sql`NOW()`,
+      })
+      .where(eq(pEngagementCache.postId, postId))
   }
 }
 

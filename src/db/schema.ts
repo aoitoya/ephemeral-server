@@ -4,11 +4,13 @@ import {
   boolean,
   char,
   check,
+  decimal,
   index,
   integer,
   json,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uuid,
@@ -76,6 +78,36 @@ export const posts = pgTable('posts', {
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
+})
+
+// engagement_cache status
+export const ecStatusEnum = pgEnum('engagement_status', [
+  'rising',
+  'stable',
+  'falling',
+  'new',
+])
+
+export const pEngagementCache = pgTable('post_engagement_cache', {
+  postId: uuid('post_id')
+    .primaryKey()
+    .references(() => posts.id, { onDelete: 'cascade' }),
+  currentVelocity: integer('current_velocity').notNull().default(0),
+  peakVelocity: integer('peak_velocity').notNull().default(0),
+  health: decimal('health', { mode: 'number', precision: 3, scale: 2 })
+    .notNull()
+    .default(1.0),
+  status: ecStatusEnum('status').notNull().default('stable'),
+  version: integer('version').notNull().default(1),
+  createdAt: timestamp('created_at')
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  nextUpdate: timestamp('next_update')
+    .notNull()
+    .default(sql`NOW() + INTERVAL '5 minutes'`),
 })
 
 export const comments = pgTable(
@@ -173,6 +205,18 @@ export const votes = pgTable(
       sql`((${table.postId} IS NULL) <> (${table.commentId} IS NULL))`
     ),
   ]
+)
+
+export const engagementHourly = pgTable(
+  'engagement_hourly',
+  {
+    hour: timestamp('hour', { mode: 'date' }).notNull(),
+    postId: uuid('content_id')
+      .notNull()
+      .references(() => posts.id),
+    score: integer('score').default(0).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.postId, t.hour] })]
 )
 
 export const refreshTokens = pgTable(

@@ -22,7 +22,7 @@ export const authenticateToken = (
     : undefined
 
   if (!token) {
-    return res.status(401).json({ error: 'Unauthorized' })
+    return res.status(401).json({ error: 'Unauthorized: no token' })
   }
 
   let decoded: jwt.JwtPayload | string
@@ -31,20 +31,20 @@ export const authenticateToken = (
     decoded = jwt.verify(token, env.JWT_ACCESS_SECRET)
 
     if (typeof decoded !== 'object') {
-      return res.status(401).json({ error: 'Unauthorized' })
+      return res.status(401).json({ error: 'Unauthorized: invalid token' })
     }
   } catch (error) {
     console.log(error)
-    return res.status(401).json({ error: 'Unauthorized' })
+    return res.status(401).json({ error: 'Unauthorized: error token' })
   }
 
   const sessionUser = req.session.user
   if (!sessionUser) {
-    return res.status(401).json({ error: 'Unauthorized' })
+    return res.status(401).json({ error: 'Unauthorized: session' })
   }
 
   if (sessionUser.id !== decoded.sub) {
-    return res.status(401).json({ error: 'Unauthorized' })
+    return res.status(401).json({ error: 'Unauthorized: no user' })
   }
 
   next()
