@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 
 import env from '../../config/env.js'
 import { type LoginUser, type NewUser, type User } from '../../db/schema.js'
+import { AuthenticationError } from '../../shared/errors/index.js'
 import UserRepository from './user.repository.js'
 
 class UserService {
@@ -14,11 +15,11 @@ class UserService {
   async login(data: LoginUser): Promise<Omit<User, 'password'>> {
     const user = await this.userRepository.findByUsername(data.username)
     if (!user) {
-      throw new Error('User not found')
+      throw new AuthenticationError('User not found')
     }
     const isPasswordValid = await bcrypt.compare(data.password, user.password)
     if (!isPasswordValid) {
-      throw new Error('Invalid password')
+      throw new AuthenticationError('Invalid password')
     }
     const { password: _, ...userInfo } = user
 
