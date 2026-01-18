@@ -11,11 +11,6 @@ class UserService {
     this.userRepository = new UserRepository()
   }
 
-  async getAll(): Promise<Omit<User, 'createdAt' | 'password'>[]> {
-    const users = await this.userRepository.getAll()
-    return users
-  }
-
   async login(data: LoginUser): Promise<Omit<User, 'password'>> {
     const user = await this.userRepository.findByUsername(data.username)
     if (!user) {
@@ -30,14 +25,14 @@ class UserService {
     return userInfo
   }
 
-  async register(data: NewUser): Promise<Omit<User, 'password'>> {
+  async register(data: NewUser): Promise<Pick<User, 'id' | 'username'>> {
     const hashedPassword = await bcrypt.hash(data.password, env.BCRYPT_ROUNDS)
     const user = await this.userRepository.create({
       ...data,
       password: hashedPassword,
     })
 
-    const { password: _, ...userInfo } = user
+    const { ...userInfo } = user
 
     return userInfo
   }

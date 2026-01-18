@@ -3,6 +3,7 @@ import { Request, Response } from 'express'
 import env from '../../config/env.js'
 import { type LoginUser, type NewUser } from '../../db/schema.js'
 import tokenRepository from '../../repositories/token.repository.js'
+import { AuthenticationError } from '../../shared/errors/index.js'
 import {
   generateAccessToken,
   generateCsrfToken,
@@ -15,13 +16,6 @@ class UserController {
 
   constructor() {
     this.userService = new UserService()
-  }
-
-  getAll = async (req: Request, res: Response) => {
-    const user = req.session.user
-    const users = await this.userService.getAll()
-
-    res.json(users.filter((u) => u.id !== user?.id))
   }
 
   getMe = (req: Request, res: Response) => {
@@ -71,13 +65,13 @@ class UserController {
     const refreshToken = req.cookies.refreshToken as string
 
     if (!refreshToken) {
-      return res.status(401).json({ error: 'No refresh token provided' })
+      throw new AuthenticationError('No refresh token provided')
     }
 
     const oldRefreshToken = await tokenRepository.getValidToken(refreshToken)
 
     if (!oldRefreshToken) {
-      return res.status(401).json({ error: 'Invalid refresh token' })
+      throw new AuthenticationError('Invalid refresh token')
     }
 
     const newRefreshToken = generateRefreshToken()
@@ -141,7 +135,7 @@ class UserController {
       secure: env.NODE_ENV === 'production',
     })
 
-    res.status(200).json({
+    res.status(201).json({
       ...user,
       expiresAt: Date.now() + env.JWT_ACCESS_EXPIRES_IN * 1000,
       token: accessToken,
