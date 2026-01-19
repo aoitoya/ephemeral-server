@@ -6,16 +6,10 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import app from '../../src/app.js'
 import { db } from '../../src/db/connection.js'
 import { users } from '../../src/db/schema.js'
+import { UserResponse } from './types.js'
 
 interface TestUser {
   password: string
-  username: string
-}
-
-interface UserResponse {
-  expiresAt: string
-  id: string
-  token: string
   username: string
 }
 
