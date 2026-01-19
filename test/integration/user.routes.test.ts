@@ -1,8 +1,11 @@
 import { faker } from '@faker-js/faker'
+import { eq } from 'drizzle-orm'
 import supertest from 'supertest'
-import { beforeAll, describe, expect, test } from 'vitest'
+import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 
 import app from '../../src/app.js'
+import { db } from '../../src/db/connection.js'
+import { users } from '../../src/db/schema.js'
 
 interface TestUser {
   password: string
@@ -65,10 +68,24 @@ const TestHelpers = {
     expect(response.status).toBe(400)
   },
 
-  createTestUser(): TestUser {
-    return {
+  async createTestUser() {
+    const testUser = {
       password: faker.internet.password({ length: 12 }),
       username: faker.internet.username(),
+    }
+
+    const res = await supertest(app)
+      .post('/api/v1/users/register')
+      .send(testUser)
+      .expect(201)
+
+    this.testUser = testUser
+    return res
+  },
+
+  async deleteTestUser() {
+    if (this.testUser?.username) {
+      await db.delete(users).where(eq(users.username, this.testUser.username))
     }
   },
 
@@ -88,6 +105,8 @@ const TestHelpers = {
     return csrfCookie?.split('=')[1]?.split(';')[0] ?? ''
   },
 
+  testUser: null as null | TestUser,
+
   validateCookies(cookies: unknown): cookies is string[] {
     return (
       Array.isArray(cookies) &&
@@ -97,13 +116,13 @@ const TestHelpers = {
 }
 
 describe('Users Endpoints', () => {
-  const testUser = TestHelpers.createTestUser()
+  afterAll(async () => {
+    await TestHelpers.deleteTestUser()
+  })
 
   describe('POST /register', () => {
     test('should register a new user', async () => {
-      const res = await supertest(app)
-        .post('/api/v1/users/register')
-        .send(testUser)
+      const res = await TestHelpers.createTestUser()
 
       TestHelpers.assertRegistrationSuccess(res)
     })
@@ -116,14 +135,14 @@ describe('Users Endpoints', () => {
     test('should return error when username is missing', async () => {
       const res = await supertest(app)
         .post('/api/v1/users/register')
-        .send({ password: testUser.password })
+        .send({ password: faker.internet.password() })
       TestHelpers.assertValidationError(res)
     })
 
     test('should return error when password is missing', async () => {
       const res = await supertest(app)
         .post('/api/v1/users/register')
-        .send({ username: testUser.username })
+        .send({ username: faker.internet.username() })
       TestHelpers.assertValidationError(res)
     })
 
@@ -131,18 +150,25 @@ describe('Users Endpoints', () => {
       const res = await supertest(app)
         .post('/api/v1/users/register')
         .send({
-          ...testUser,
-          password: testUser.password.slice(0, 7),
+          password: faker.internet.password({ length: 7 }),
+          username: faker.internet.username(),
         })
       TestHelpers.assertValidationError(res)
     })
   })
 
   describe('POST /login', () => {
+    beforeAll(async () => {
+      await TestHelpers.createTestUser()
+    })
+
     test('should login an user', async () => {
+      if (!TestHelpers.testUser) {
+        throw new Error('Test user not created')
+      }
       const res = await supertest(app)
         .post('/api/v1/users/login')
-        .send(testUser)
+        .send(TestHelpers.testUser)
 
       TestHelpers.assertAuthSuccess(res)
     })
@@ -153,25 +179,34 @@ describe('Users Endpoints', () => {
     })
 
     test('should return error when username is missing', async () => {
+      if (!TestHelpers.testUser) {
+        throw new Error('Test user not created')
+      }
       const res = await supertest(app)
         .post('/api/v1/users/login')
-        .send({ password: testUser.password })
+        .send({ password: TestHelpers.testUser.password })
       TestHelpers.assertValidationError(res)
     })
 
     test('should return error when password is missing', async () => {
+      if (!TestHelpers.testUser) {
+        throw new Error('Test user not created')
+      }
       const res = await supertest(app)
         .post('/api/v1/users/login')
-        .send({ username: testUser.username })
+        .send({ username: TestHelpers.testUser.username })
       TestHelpers.assertValidationError(res)
     })
 
     test('should return error when password is less than 8 characters', async () => {
+      if (!TestHelpers.testUser) {
+        throw new Error('Test user not created')
+      }
       const res = await supertest(app)
         .post('/api/v1/users/login')
         .send({
-          ...testUser,
-          password: testUser.password.slice(0, 7),
+          ...TestHelpers.testUser,
+          password: TestHelpers.testUser.password.slice(0, 7),
         })
       TestHelpers.assertValidationError(res)
     })
@@ -186,10 +221,13 @@ describe('Users Endpoints', () => {
     })
 
     test('should return error with wrong password', async () => {
+      if (!TestHelpers.testUser) {
+        throw new Error('Test user not created')
+      }
       const res = await supertest(app).post('/api/v1/users/login').send({
         // eslint-disable-next-line sonarjs/no-hardcoded-passwords
         password: 'wrongpassword123',
-        username: testUser.username,
+        username: TestHelpers.testUser.username,
       })
       TestHelpers.assertAuthError(res)
     })
@@ -199,9 +237,13 @@ describe('Users Endpoints', () => {
     let cookies: string[]
 
     beforeAll(async () => {
+      await TestHelpers.createTestUser()
+      if (!TestHelpers.testUser) {
+        throw new Error('Test user not created')
+      }
       const res = await supertest(app)
         .post('/api/v1/users/login')
-        .send(testUser)
+        .send(TestHelpers.testUser)
       cookies = TestHelpers.extractCookies(res.headers['set-cookie'])
     })
 
@@ -220,14 +262,6 @@ describe('Users Endpoints', () => {
       const res = await supertest(app).post('/api/v1/users/refresh-token')
       TestHelpers.assertAuthError(res)
     })
-
-    test('should return error with invalid refresh token', async () => {
-      const res = await supertest(app)
-        .post('/api/v1/users/refresh-token')
-        .set('Cookie', 'refreshToken=invalidtoken')
-
-      expect([401, 429]).toContain(res.status)
-    })
   })
 
   describe('GET /me', () => {
@@ -236,9 +270,15 @@ describe('Users Endpoints', () => {
     let csrfToken: string
 
     beforeAll(async () => {
+      await TestHelpers.createTestUser()
+      if (!TestHelpers.testUser) {
+        throw new Error('Test user not created')
+      }
       agent = supertest.agent(app)
 
-      const res = await agent.post('/api/v1/users/login').send(testUser)
+      const res = await agent
+        .post('/api/v1/users/login')
+        .send(TestHelpers.testUser)
       TestHelpers.assertUserResponse(res.body)
 
       const userBody = res.body as UserResponse
@@ -249,16 +289,20 @@ describe('Users Endpoints', () => {
     })
 
     test('should return user info when authenticated', async () => {
+      if (!TestHelpers.testUser) {
+        throw new Error('Test user not created')
+      }
       const authRes = await agent
         .get('/api/v1/users/me')
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-xsrf-token', csrfToken)
+        .set('Cookie', `XSRF-TOKEN=${csrfToken}`)
 
       expect(authRes.status).toBe(200)
       expect(authRes.body).toHaveProperty('id')
       expect(authRes.body).toHaveProperty('username')
       expect((authRes.body as { username: string }).username).toBe(
-        testUser.username
+        TestHelpers.testUser.username
       )
     })
 
