@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express'
 
+import { AuthenticationError } from '../../shared/errors/index.js'
 import { NotificationRepository } from './notification.repository.js'
 
 export class NotificationController {
@@ -13,7 +14,7 @@ export class NotificationController {
     const user = req.session.user
 
     if (!user) {
-      return res.status(401).json({ message: 'No user id found' })
+      throw new AuthenticationError('No user id found')
     }
 
     const notifications = await this.notificationRepository.getNotifications(

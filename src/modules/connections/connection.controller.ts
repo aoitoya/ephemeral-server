@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 
+import { AuthenticationError } from '../../shared/errors/index.js'
 import { ConnectionService } from './connection.service.js'
 import { GetConnectionsQuery } from './connection.validation.js'
 
@@ -18,7 +19,7 @@ class ConnectionController {
     const currentUser = req.session.user
 
     if (!currentUser) {
-      return res.status(401).json({ message: 'Unauthorized' })
+      throw new AuthenticationError('No user id found')
     }
 
     await this.connectionService.respondToConnectionRequest(
@@ -41,7 +42,7 @@ class ConnectionController {
     const currentUser = req.session.user
 
     if (!currentUser) {
-      return res.status(401).json({ message: 'Unauthorized' })
+      throw new AuthenticationError('No user id found')
     }
 
     const connections = await this.connectionService.getConnections(
@@ -57,7 +58,7 @@ class ConnectionController {
     const currentUser = req.session.user
 
     if (!currentUser) {
-      return res.status(401).json({ message: 'Unauthorized' })
+      throw new AuthenticationError('No user id found')
     }
 
     const connections = await this.connectionService.getOnlineConnections(
@@ -72,7 +73,7 @@ class ConnectionController {
     const currentUser = req.session.user
 
     if (!currentUser) {
-      return res.status(401).json({ message: 'Unauthorized' })
+      throw new AuthenticationError('No user id found')
     }
 
     await this.connectionService.removeConnection(connectionId, currentUser.id)
@@ -85,7 +86,7 @@ class ConnectionController {
     const currentUser = req.session.user
 
     if (!currentUser) {
-      return res.status(401).json({ message: 'Unauthorized' })
+      throw new AuthenticationError('No user id found')
     }
 
     await this.connectionService.requestConnection(recipientId, currentUser)

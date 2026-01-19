@@ -1,12 +1,14 @@
 import { Connection } from '../../db/schema.js'
-import { notificationService } from '../../index.js'
+import NotificationService from '../notifications/notification.socket.js'
 import { ConnectionRepository } from './connection.repository.js'
 
 export class ConnectionService {
   private connectionRepository: ConnectionRepository
+  private notificationService?: NotificationService
 
-  constructor() {
+  constructor(notificationService?: NotificationService) {
     this.connectionRepository = new ConnectionRepository()
+    this.notificationService = notificationService
   }
 
   async getConnectionBetweenUsers(userId1: string, userId2: string) {
@@ -79,7 +81,12 @@ export class ConnectionService {
       userB: targetUserId,
     })
 
-    await notificationService.sendConnectionReqReceived(targetUserId, actorUser)
+    if (this.notificationService) {
+      await this.notificationService.sendConnectionReqReceived(
+        targetUserId,
+        actorUser
+      )
+    }
 
     return conn
   }
