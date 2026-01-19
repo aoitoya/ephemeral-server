@@ -30,7 +30,9 @@ export const createVoteSchema = z
 
 export const createPostSchema = z.object({
   content: z.string().min(1, 'Content cannot be empty'),
-  topics: z.array(z.string().min(1, 'Topic cannot be empty')),
+  topics: z
+    .array(z.string().min(1, 'Topic cannot be empty'))
+    .min(1, 'At least one topic is required'),
 })
 
 export type CreateCommentInput = z.infer<typeof createCommentSchema>
