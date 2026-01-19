@@ -4,13 +4,13 @@ import {
   boolean,
   char,
   check,
-  decimal,
   index,
   integer,
   json,
   pgEnum,
   pgTable,
   primaryKey,
+  real,
   text,
   timestamp,
   uuid,
@@ -73,41 +73,13 @@ export const posts = pgTable('posts', {
   id: uuid('id')
     .primaryKey()
     .default(sql`gen_random_uuid()`),
+  nextScoreUpdate: timestamp('next_score_update'),
+  score: real('score'),
   topics: text('topics').array().notNull(),
   upvotes: integer('upvotes').notNull().default(0),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-})
-
-// engagement_cache status
-export const ecStatusEnum = pgEnum('engagement_status', [
-  'rising',
-  'stable',
-  'falling',
-  'new',
-])
-
-export const pEngagementCache = pgTable('post_engagement_cache', {
-  postId: uuid('post_id')
-    .primaryKey()
-    .references(() => posts.id, { onDelete: 'cascade' }),
-  currentVelocity: integer('current_velocity').notNull().default(0),
-  peakVelocity: integer('peak_velocity').notNull().default(0),
-  health: decimal('health', { mode: 'number', precision: 3, scale: 2 })
-    .notNull()
-    .default(1.0),
-  status: ecStatusEnum('status').notNull().default('stable'),
-  version: integer('version').notNull().default(1),
-  createdAt: timestamp('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: timestamp('updated_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  nextUpdate: timestamp('next_update')
-    .notNull()
-    .default(sql`NOW() + INTERVAL '5 minutes'`),
 })
 
 export const comments = pgTable(
@@ -211,10 +183,10 @@ export const engagementHourly = pgTable(
   'engagement_hourly',
   {
     hour: timestamp('hour', { mode: 'date' }).notNull(),
+    points: integer('points').default(0).notNull(),
     postId: uuid('content_id')
       .notNull()
       .references(() => posts.id),
-    score: integer('score').default(0).notNull(),
   },
   (t) => [primaryKey({ columns: [t.postId, t.hour] })]
 )
@@ -237,6 +209,11 @@ export const refreshTokens = pgTable(
     index('idx_refresh_expires').on(table.expiresAt),
   ]
 )
+
+export const configs = pgTable('configs', {
+  key: text('key').primaryKey(),
+  value: text('value'),
+})
 
 export const session = pgTable('session', {
   expire: timestamp('expire'),
