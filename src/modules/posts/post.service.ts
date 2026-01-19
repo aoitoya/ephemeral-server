@@ -4,12 +4,16 @@ import { db } from '../../db/connection.js'
 import {
   comments,
   engagementHourly,
-  pEngagementCache,
   posts,
   users,
   Vote,
   votes,
 } from '../../db/schema.js'
+import {
+  AuthorizationError,
+  DatabaseError,
+  NotFoundError,
+} from '../../shared/errors/index.js'
 
 export type CreateCommentInput = {
   content: string
@@ -49,6 +53,17 @@ export type CreateVoteInput = {
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
+const ENGAGEMENT_WEIGHTS = {
+  '-comment': -2,
+  '-downvote': 4,
+  '-upvote': -3,
+  comment: 2,
+  downvote: -4,
+  upvote: 3,
+} as const
+
+type EngagementType = keyof typeof ENGAGEMENT_WEIGHTS
+
 class PostService {
   async createComment(input: CreateCommentInput) {
     const comment = await db.transaction(async (tx) => {
@@ -70,43 +85,58 @@ class PostService {
 
   async createPost(input: CreatePostInput) {
     const [post] = await db.insert(posts).values(input).returning()
-
     return post
   }
 
-  async getCommentReplies(commentId: string) {
+  async getCommentReplies(commentId: string, userId?: string) {
     const rows = await db
       .select()
       .from(comments)
       .where(eq(comments.commentId, commentId))
       .orderBy(asc(comments.createdAt))
       .leftJoin(users, eq(comments.userId, users.id))
-      .leftJoin(votes, eq(comments.id, votes.commentId))
+      .leftJoin(
+        votes,
+        and(eq(comments.id, votes.commentId), eq(votes.userId, userId ?? ''))
+      )
 
     return rows.map((r) => ({
       ...r.comments,
       author: r.users,
       userVote: r.votes?.type,
+      votes: r.votes,
     }))
   }
 
-  async getComments(postId: string) {
-    const rows = await db
+  async getComments(postId: string, userId?: string) {
+    const query = db
       .select()
       .from(comments)
       .where(eq(comments.postId, postId))
       .orderBy(desc(comments.createdAt))
       .leftJoin(users, eq(comments.userId, users.id))
-      .leftJoin(votes, eq(comments.id, votes.commentId))
 
+    if (userId) {
+      const rows = await query.leftJoin(
+        votes,
+        and(eq(comments.id, votes.commentId), eq(votes.userId, userId))
+      )
+
+      return rows.map((r) => ({
+        ...r.comments,
+        author: r.users,
+        userVote: r.votes?.type,
+      }))
+    }
+
+    const rows = await query
     return rows.map((r) => ({
       ...r.comments,
       author: r.users,
-      userVote: r.votes?.type,
     }))
   }
 
-  async getPosts(currentUserId: string) {
+  async getPosts(currentUserId?: string) {
     const commentCounts = db.$with('comment_counts').as(
       db
         .select({
@@ -116,14 +146,6 @@ class PostService {
         .from(comments)
         .groupBy(comments.postId)
     )
-
-    const feedScore = sql<number>`(
-    COALESCE(${pEngagementCache.currentVelocity}, 1)
-    * EXP(
-        -EXTRACT(EPOCH FROM (NOW() - ${posts.createdAt})) / 3600.0 / 6.0
-      )
-    * LN(GREATEST(${posts.upvotes} + 1, 1))
-  )`.as('feed_score')
 
     const query = db
       .with(commentCounts)
@@ -136,51 +158,84 @@ class PostService {
         content: posts.content,
         createdAt: posts.createdAt,
         downvotes: posts.downvotes,
-        feedScore: feedScore,
         id: posts.id,
+        score: posts.score,
         topics: posts.topics,
         upvotes: posts.upvotes,
         userId: posts.userId,
-        userVote: votes.type,
       })
       .from(posts)
-      .leftJoin(pEngagementCache, eq(pEngagementCache.postId, posts.id))
       .leftJoin(commentCounts, eq(commentCounts.postId, posts.id))
       .leftJoin(users, eq(posts.userId, users.id))
-      .leftJoin(
+
+    if (currentUserId) {
+      query.leftJoin(
         votes,
         and(eq(votes.postId, posts.id), eq(votes.userId, currentUserId))
       )
-      .orderBy(desc(feedScore))
+    }
 
-    return await query
+    const rows = await query.orderBy(desc(posts.score))
+
+    return rows
   }
 
   async vote(input: CreateVoteInput) {
-    return db.transaction(async (tx) => {
-      const { type, userId } = input
-      const isPostVote = 'postId' in input
-      const id = isPostVote ? input.postId : input.commentId
+    try {
+      return await db.transaction(async (tx) => {
+        const { type, userId } = input
+        const isPostVote = 'postId' in input
+        const id = isPostVote ? input.postId : input.commentId
 
-      const voteCondition = isPostVote
-        ? eq(votes.postId, id)
-        : eq(votes.commentId, id)
+        const table = isPostVote ? posts : comments
+        const contentResults = await tx
+          .select({ userId: table.userId })
+          .from(table)
+          .where(eq(table.id, id))
 
-      const voteWhere = and(eq(votes.userId, userId), voteCondition)
-      const existingVote = (
-        await tx.select().from(votes).where(voteWhere)
-      )[0] as undefined | Vote
+        if (contentResults.length === 0) {
+          throw new NotFoundError(
+            isPostVote ? 'Post not found' : 'Comment not found'
+          )
+        }
 
-      if (!existingVote) {
-        return this.handleNewVote(tx, input, isPostVote, id)
+        const content = contentResults[0]
+        if (content.userId === userId) {
+          throw new AuthorizationError('Cannot vote on your own content')
+        }
+
+        const voteCondition = isPostVote
+          ? eq(votes.postId, id)
+          : eq(votes.commentId, id)
+
+        const voteWhere = and(eq(votes.userId, userId), voteCondition)
+        const existingVotes = await tx.select().from(votes).where(voteWhere)
+
+        if (existingVotes.length === 0) {
+          return this.handleNewVote(tx, input, isPostVote, id)
+        }
+
+        const existingVote = existingVotes[0]
+
+        if (existingVote.type === type) {
+          return this.handleVoteRemoval(tx, input, existingVote, isPostVote, id)
+        }
+
+        return this.handleVoteUpdate(tx, input, existingVote, isPostVote, id)
+      })
+    } catch (error) {
+      // Re-throw custom errors as-is, wrap database errors
+      if (
+        error instanceof AuthorizationError ||
+        error instanceof NotFoundError
+      ) {
+        throw error
       }
-
-      if (existingVote.type === type) {
-        return this.handleVoteRemoval(tx, input, existingVote, isPostVote, id)
-      }
-
-      return this.handleVoteUpdate(tx, input, existingVote, isPostVote, id)
-    })
+      throw new DatabaseError(
+        'Failed to process vote',
+        error instanceof Error ? error : undefined
+      )
+    }
   }
 
   private async handleNewVote(
@@ -193,11 +248,20 @@ class PostService {
     await tx.insert(votes).values(input)
 
     const table = isPostVote ? posts : comments
-    const column = type === 'upvote' ? 'upvotes' : 'downvotes'
+    const downvotesColumn = isPostVote ? posts.downvotes : comments.downvotes
+    const upvotesColumn = isPostVote ? posts.upvotes : comments.upvotes
+
+    const downvotesValue =
+      type === 'downvote' ? sql`${downvotesColumn} + 1` : downvotesColumn
+    const upvotesValue =
+      type === 'upvote' ? sql`${upvotesColumn} + 1` : upvotesColumn
 
     const [result] = await tx
       .update(table)
-      .set({ [column]: sql`${table[column]} + 1` })
+      .set({
+        downvotes: downvotesValue,
+        upvotes: upvotesValue,
+      })
       .where(eq(table.id, id))
       .returning()
 
@@ -219,11 +283,20 @@ class PostService {
     await tx.delete(votes).where(eq(votes.id, existingVote.id))
 
     const table = isPostVote ? posts : comments
-    const column = type === 'upvote' ? 'upvotes' : 'downvotes'
+    const downvotesColumn = isPostVote ? posts.downvotes : comments.downvotes
+    const upvotesColumn = isPostVote ? posts.upvotes : comments.upvotes
+
+    const downvotesValue =
+      type === 'downvote' ? sql`${downvotesColumn} - 1` : downvotesColumn
+    const upvotesValue =
+      type === 'upvote' ? sql`${upvotesColumn} - 1` : upvotesColumn
 
     const [result] = await tx
       .update(table)
-      .set({ [column]: sql`${table[column]} - 1` })
+      .set({
+        downvotes: downvotesValue,
+        upvotes: upvotesValue,
+      })
       .where(eq(table.id, id))
       .returning()
 
@@ -251,14 +324,17 @@ class PostService {
     const [result] = await tx
       .update(table)
       .set({
-        downvotes: sql`${table.downvotes} + ${downvoteIncrement}`,
-        upvotes: sql`${table.upvotes} + ${upvoteIncrement}`,
+        downvotes: isPostVote
+          ? sql`${posts.downvotes} + ${downvoteIncrement}`
+          : sql`${comments.downvotes} + ${downvoteIncrement}`,
+        upvotes: isPostVote
+          ? sql`${posts.upvotes} + ${upvoteIncrement}`
+          : sql`${comments.upvotes} + ${upvoteIncrement}`,
       })
       .where(eq(table.id, id))
       .returning()
 
     if (isPostVote) {
-      // Remove old vote engagement and add new vote engagement
       await this.updateHourlyEngagement({
         postId: id,
         tx,
@@ -277,43 +353,21 @@ class PostService {
   }: {
     postId: string
     tx?: Transaction
-    type:
-      | '-comment'
-      | '-downvote'
-      | '-upvote'
-      | 'comment'
-      | 'downvote'
-      | 'upvote'
+    type: EngagementType
   }) {
-    const WEIGHT = {
-      '-comment': -2,
-      '-downvote': 4,
-      '-upvote': -3,
-      comment: 2,
-      downvote: -4,
-      upvote: 3,
-    }
-
     await (tx ?? db)
       .insert(engagementHourly)
       .values({
         hour: sql`date_trunc('hour', now())`,
+        points: ENGAGEMENT_WEIGHTS[type],
         postId,
-        score: WEIGHT[type],
       })
       .onConflictDoUpdate({
         set: {
-          score: sql`${engagementHourly.score} + excluded.score`,
+          points: sql`${engagementHourly.points} + excluded.points`,
         },
         target: [engagementHourly.postId, engagementHourly.hour],
       })
-
-    await (tx ?? db)
-      .update(pEngagementCache)
-      .set({
-        nextUpdate: sql`NOW()`,
-      })
-      .where(eq(pEngagementCache.postId, postId))
   }
 }
 
