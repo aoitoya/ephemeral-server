@@ -6,6 +6,10 @@ import type {
   CreateVoteInput,
 } from './post.validation.js'
 
+import {
+  AuthenticationError,
+  ValidationError,
+} from '../../shared/errors/index.js'
 import PostService from './post.service.js'
 
 class PostController {
@@ -20,7 +24,7 @@ class PostController {
     const { commentId, content, postId } = req.body as CreateCommentInput
 
     if (!user) {
-      return res.status(401).json({ message: 'No user id found' })
+      throw new AuthenticationError('No user id found')
     }
 
     if (postId) {
@@ -53,7 +57,7 @@ class PostController {
     const user = req.session.user
 
     if (!user) {
-      return res.status(401).json({ message: 'No user id found' })
+      throw new AuthenticationError('No user id found')
     }
 
     const post = await this.postService.createPost({
@@ -68,11 +72,7 @@ class PostController {
   getAll = async (req: Request, res: Response) => {
     const user = req.session.user
 
-    if (!user) {
-      return res.status(401).json({ message: 'No user id found' })
-    }
-
-    const posts = await this.postService.getPosts(user.id)
+    const posts = await this.postService.getPosts(user?.id)
 
     return res.status(200).json(posts)
   }
@@ -82,18 +82,17 @@ class PostController {
     const commentId = req.query.commentId as string
     const user = req.session.user
 
-    if (!user) {
-      return res.status(401).json({ message: 'No user id found' })
-    }
-
     if (commentId) {
-      const comments = await this.postService.getCommentReplies(commentId)
+      const comments = await this.postService.getCommentReplies(
+        commentId,
+        user?.id
+      )
 
       return res.status(200).json(comments)
     }
 
     if (postId) {
-      const comments = await this.postService.getComments(postId)
+      const comments = await this.postService.getComments(postId, user?.id)
 
       return res.status(200).json(comments)
     }
@@ -108,7 +107,7 @@ class PostController {
     const { commentId, postId, type } = req.body as CreateVoteInput
 
     if (!user) {
-      return res.status(401).json({ message: 'No user id found' })
+      throw new AuthenticationError('No user id found')
     }
 
     if (commentId) {
@@ -129,9 +128,7 @@ class PostController {
       return res.status(200).json(post)
     }
 
-    return res
-      .status(400)
-      .json({ message: 'Either commentId or postId must be provided' })
+    throw new ValidationError('Either commentId or postId must be provided')
   }
 }
 
