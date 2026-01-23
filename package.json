@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "NODE_ENV=development tsx watch --env-file .env src/index.ts",
-    "start": "node --env-file .env dist/index.js",
+    "start": "NODE_ENV=production node dist/index.js",
     "build": "tsc -p tsconfig.build.json",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
@@ -41,7 +41,6 @@
     "connect-pg-simple": "^10.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "express": "^5.1.0",
     "express-rate-limit": "^8.2.1",
@@ -90,5 +89,8 @@
   "optionalDependencies": {
     "bufferutil": "^4.0.9",
     "utf-8-validate": "^6.0.5"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

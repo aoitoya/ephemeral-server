@@ -8,6 +8,15 @@ import * as schema from '../src/db/schema.js'
 
 const execAsync = promisify(exec)
 
+process.env.NODE_ENV = 'test'
+process.env.PORT = '3000'
+process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test_db'
+process.env.JWT_ACCESS_SECRET = 'test_jwt_access_secret_32_characters_min'
+process.env.JWT_ACCESS_EXPIRES_IN = '900'
+process.env.REFRESH_EXPIRES_IN = '604800'
+process.env.SESSION_SECRET = 'test_session_secret_32_characters_minimum'
+process.env.BCRYPT_ROUNDS = '10'
+
 vi.mock('../src/db/connection.js', async () => {
   const { stdout } = await execAsync('pnpm drizzle-kit export')
 
