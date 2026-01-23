@@ -118,7 +118,7 @@ export const chatMessages = pgTable('chat_messages', {
   id: uuid('id')
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  recipentId: uuid('recipent_id')
+  recipientId: uuid('recipient_id')
     .notNull()
     .references(() => users.id, {
       onDelete: 'cascade',
