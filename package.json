@@ -10,7 +10,6 @@
     "build": "tsc -p tsconfig.build.json",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
     "db:seed": "tsx src/db/seed.ts",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
