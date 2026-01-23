@@ -11,7 +11,7 @@ const envSchema = z.object({
     .regex(/^\d+$/, 'must be a numeric string')
     .transform(Number),
   JWT_ACCESS_SECRET: z.string().min(32),
-  NODE_ENV: z.enum(['development', 'production']),
+  NODE_ENV: z.enum(['development', 'production', 'test']),
   PORT: z.string().regex(/^\d+$/, 'must be a numeric string').transform(Number),
   REFRESH_EXPIRES_IN: z
     .string()
