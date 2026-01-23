@@ -13,15 +13,15 @@ export class ChatMessageRepository {
     const whereClause = userB
       ? or(
           and(
-            eq(chatMessages.recipentId, userA),
+            eq(chatMessages.recipientId, userA),
             eq(chatMessages.senderId, userB)
           ),
           and(
-            eq(chatMessages.recipentId, userB),
+            eq(chatMessages.recipientId, userB),
             eq(chatMessages.senderId, userA)
           )
         )
-      : eq(chatMessages.recipentId, userA)
+      : eq(chatMessages.recipientId, userA)
 
     const result = await db
       .select({
