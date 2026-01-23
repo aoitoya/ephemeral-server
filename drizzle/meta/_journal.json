@@ -15,6 +15,13 @@
       "when": 1769159244295,
       "tag": "0001_update_post_score",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769172021710,
+      "tag": "0002_closed_sentry",
+      "breakpoints": true
     }
   ]
 }

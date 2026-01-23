@@ -125,7 +125,7 @@ class MessageService {
 
       await this.chatMessageRepository.addMessage({
         content: message.content,
-        recipentId: room.id,
+        recipientId: room.id,
         senderId: user.id,
       })
 
