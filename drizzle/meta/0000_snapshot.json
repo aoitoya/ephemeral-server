@@ -1,5 +1,5 @@
 {
-  "id": "b81e501b-040f-4fa7-ae09-204fcc7c18c2",
+  "id": "208b5abe-31b7-4e2c-bdf8-d9c91563d7f4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -28,8 +28,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "recipent_id": {
-          "name": "recipent_id",
+        "recipient_id": {
+          "name": "recipient_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -43,12 +43,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "chat_messages_recipent_id_users_id_fk": {
-          "name": "chat_messages_recipent_id_users_id_fk",
+        "chat_messages_recipient_id_users_id_fk": {
+          "name": "chat_messages_recipient_id_users_id_fk",
           "tableFrom": "chat_messages",
           "tableTo": "users",
           "columnsFrom": [
-            "recipent_id"
+            "recipient_id"
           ],
           "columnsTo": [
             "id"
@@ -494,6 +494,13 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "is_dead": {
+          "name": "is_dead",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "next_score_update": {
           "name": "next_score_update",
           "type": "timestamp",
@@ -503,6 +510,12 @@
         "score": {
           "name": "score",
           "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "score_updated_at": {
+          "name": "score_updated_at",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },

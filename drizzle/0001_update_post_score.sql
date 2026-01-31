@@ -8,23 +8,23 @@ DECLARE
   v_avg_score DECIMAL;
   v_post_lifespan INTEGER;
 BEGIN
-  SELECT val::DECIMAL INTO v_avg_score
-  FROM utils WHERE KEY = 'AVG_SCORE';
+  SELECT value::DECIMAL INTO v_avg_score
+  FROM configs WHERE key = 'AVG_SCORE';
 
-  SELECT val::INTEGER INTO v_post_lifespan
-  FROM utils WHERE KEY = 'POST_LIFESPAN';
+  SELECT value::INTEGER INTO v_post_lifespan
+  FROM configs WHERE key = 'POST_LIFESPAN';
 
   v_avg_score := COALESCE(v_avg_score, 100.0);
   v_post_lifespan := COALESCE(v_post_lifespan, 86400);
 
   WITH posts_to_update AS (
-    SELECT p.post_id, p.created_at
+    SELECT p.id AS post_id, p.created_at
     FROM posts p
     WHERE NOT p.is_dead AND (
-      p.updated_score_at < NOW() - INTERVAL '10 minutes'
+      p.score_updated_at < NOW() - INTERVAL '10 minutes'
       OR p.next_score_update <= NOW()
     )
-    ORDER BY next_score_update NULLS FIRST, updated_score_at ASC
+    ORDER BY next_score_update NULLS FIRST, score_updated_at ASC
     LIMIT v_batch_size
     FOR UPDATE SKIP LOCKED
   ),
@@ -79,14 +79,14 @@ BEGIN
   SET
     score = pl.score,
     is_dead = pl.life <= 0,
-    updated_score_at = NOW(),
+    score_updated_at = NOW(),
     next_score_update = CASE
       WHEN pl.life < 10 THEN NOW() + INTERVAL '2 minutes'
       WHEN pl.life < 30 THEN NOW() + INTERVAL '5 minutes'
       ELSE NOW() + INTERVAL '15 minutes'
     END
   FROM posts_with_life pl
-  WHERE p.post_id = pl.post_id;
+  WHERE p.id = pl.post_id;
 
   GET DIAGNOSTICS v_updated = ROW_COUNT;
 
