@@ -1,16 +1,4 @@
 -- Custom SQL migration file, put your code below! --
--- Add missing columns to posts table
-ALTER TABLE "posts" ADD COLUMN "is_dead" boolean NOT NULL DEFAULT false;
-ALTER TABLE "posts" ADD COLUMN "score_updated_at" timestamp;
-ALTER TABLE "posts" ADD COLUMN "next_score_update" timestamp;
-ALTER TABLE "posts" ADD COLUMN "score" real;
-
--- Add default configuration values
-INSERT INTO configs (key, value) VALUES 
-  ('AVG_SCORE', '100.0'),
-  ('POST_LIFESPAN', '86400')
-ON CONFLICT (key) DO NOTHING;
-
 CREATE OR REPLACE FUNCTION update_post_score () RETURNS JSONB AS $$
 
 DECLARE
