@@ -1,5 +1,5 @@
 {
-  "id": "63581c28-b78f-4647-88de-b244c0e43de9",
+  "id": "981cde0c-7952-4498-98a6-f21037ed6a2f",
   "prevId": "89bd4f3a-0e06-469b-8ff0-afbfe90c8d95",
   "version": "7",
   "dialect": "postgresql",
@@ -494,6 +494,13 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "is_dead": {
+          "name": "is_dead",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "next_score_update": {
           "name": "next_score_update",
           "type": "timestamp",
@@ -503,6 +510,12 @@
         "score": {
           "name": "score",
           "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "score_updated_at": {
+          "name": "score_updated_at",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },

@@ -4,10 +4,10 @@ import logger from '../config/logger.js'
 import { db } from '../db/connection.js'
 import { configs, posts } from '../db/schema.js'
 
-class EngagementUpdateScheduler {
+class PostScoreUpdateScheduler {
   private readonly AVERAGE_SCORE_UPDATE_INTERVAL = 24 * 60 * 60 * 1000
   private averageScoreInterval: NodeJS.Timeout | null = null
-  private readonly ENGAGEMENT_UPDATE_INTERVAL = 2 * 60 * 1000
+  private readonly ENGAGEMENT_UPDATE_INTERVAL = 10 * 1000
   private engagementInterval: NodeJS.Timeout | null = null
   private readonly TOP_POSTS_LIMIT = 1_000_000
 
@@ -52,7 +52,7 @@ class EngagementUpdateScheduler {
 
   private startEngagementUpdates() {
     this.engagementInterval = setInterval(() => {
-      this.updateEngagementCache().catch(this.handleError)
+      this.updatePostScore().catch(this.handleError)
     }, this.ENGAGEMENT_UPDATE_INTERVAL)
   }
 
@@ -85,18 +85,18 @@ class EngagementUpdateScheduler {
     }
   }
 
-  private async updateEngagementCache() {
+  private async updatePostScore() {
     try {
       const result = await db.execute(sql`SELECT update_post_score()`)
       if (result.rows.length === 0) {
-        logger.warn('No result from engagement cache update')
+        logger.warn('No result from post score update')
         return
       }
-      logger.info('Engagement cache updated:', result.rows[0])
+      logger.info('Post score updated:', result.rows[0])
     } catch (error) {
-      logger.error('Failed to update engagement cache:', error)
+      logger.error('Failed to update post score:', error)
     }
   }
 }
 
-export const engagementScheduler = new EngagementUpdateScheduler()
+export const postScoreUpdateScheduler = new PostScoreUpdateScheduler()
