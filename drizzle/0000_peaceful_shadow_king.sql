@@ -5,7 +5,7 @@ CREATE TABLE "chat_messages" (
 	"content" text NOT NULL,
 	"created_at" timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"recipent_id" uuid NOT NULL,
+	"recipient_id" uuid NOT NULL,
 	"sender_id" uuid NOT NULL
 );
 --> statement-breakpoint
@@ -58,8 +58,10 @@ CREATE TABLE "posts" (
 	"created_at" timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	"downvotes" integer DEFAULT 0 NOT NULL,
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"is_dead" boolean DEFAULT false NOT NULL,
 	"next_score_update" timestamp,
 	"score" real,
+	"score_updated_at" timestamp,
 	"topics" text[] NOT NULL,
 	"upvotes" integer DEFAULT 0 NOT NULL,
 	"user_id" uuid NOT NULL
@@ -102,7 +104,7 @@ CREATE TABLE "votes" (
 	CONSTRAINT "votes_post_xor_comment" CHECK ((("votes"."post_id" IS NULL) <> ("votes"."comment_id" IS NULL)))
 );
 --> statement-breakpoint
-ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_recipent_id_users_id_fk" FOREIGN KEY ("recipent_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_recipient_id_users_id_fk" FOREIGN KEY ("recipient_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_sender_id_users_id_fk" FOREIGN KEY ("sender_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "comments" ADD CONSTRAINT "comments_comment_id_comments_id_fk" FOREIGN KEY ("comment_id") REFERENCES "public"."comments"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "comments" ADD CONSTRAINT "comments_post_id_posts_id_fk" FOREIGN KEY ("post_id") REFERENCES "public"."posts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

@@ -5,22 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1769159024630,
-      "tag": "0000_fat_black_bolt",
+      "when": 1769875758667,
+      "tag": "0000_peaceful_shadow_king",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1769159244295,
+      "when": 1769875764866,
       "tag": "0001_update_post_score",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1769172021710,
-      "tag": "0002_closed_sentry",
       "breakpoints": true
     }
   ]
