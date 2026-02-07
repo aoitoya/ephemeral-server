@@ -11,7 +11,7 @@ post {
 }
 
 auth:bearer {
-  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNmMGM2M2E1LTJiNDMtNDJkOS04YWNiLTc4MzM4M2QwYzEyMiIsImlhdCI6MTc2MjQ0MjMyMSwiZXhwIjoxNzYyNDQ1OTIxfQ.I5M1nHMcrdmISmqutoEU38rPIRDY-fSoi0EFuo5c5Ck
+  token: {{auth_token}}
 }
 
 body:json {
@@ -19,6 +19,10 @@ body:json {
     "content": "bye",
     "topics": ["evoke"]
   }
+}
+
+vars:pre-request {
+  auth_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyYjc1Y2YzMi1kNjZmLTRjZmMtOTA4OC1iM2ExZDlhNDNlNmEiLCJpYXQiOjE3NzAzNDU3MTQsImV4cCI6MTc3MDM0OTMxNH0.lnwfbsfKI0b8yyj6HODklNPzPghwe4BK_bJG2YIeNzM
 }
 
 settings {

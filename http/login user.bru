@@ -19,10 +19,15 @@ body:json {
 
 script:post-response {
   if (res.status === 200) {
-    bru.setEnvVar('auth_token', res.body.token)
-  } else {
-    bru.setEnvVar('auth_token', res.status)
+    bru.setEnvVar("auth_token", res.body.token);
+  
+    const jar = bru.cookies.jar();
+  
+    const csrf_token = await jar.getCookie("http://localhost:3000", "XSRF-TOKEN");
+  
+    bru.setEnvVar("csrf_token", csrf_token.value);
   }
+  
 }
 
 settings {
