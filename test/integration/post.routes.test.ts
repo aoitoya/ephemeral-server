@@ -104,12 +104,12 @@ describe('Posts Endpoints', () => {
       expect(res.status).toBe(400)
     })
 
-    test('should return error when topics array is empty', async () => {
+    test('should create post with empty topics array', async () => {
       const res = await agent
         .post('/api/v1/posts')
         .send({ content: faker.lorem.sentence(), topics: [] })
 
-      expect(res.status).toBe(400)
+      expect(res.status).toBe(201)
     })
 
     test('should return error when topics contain empty strings', async () => {
@@ -301,7 +301,7 @@ describe('Posts Endpoints', () => {
       expect(res.body).toHaveProperty('id')
     })
 
-    test('should not upvote their own post', async () => {
+    test('should upvote their own post', async () => {
       const vote = {
         postId: createdPostId,
         type: 'upvote',
@@ -309,7 +309,7 @@ describe('Posts Endpoints', () => {
 
       const res = await agent.post('/api/v1/posts/vote').send(vote)
 
-      expect(res.status).toBe(403)
+      expect(res.status).toBe(200)
     })
 
     test('should downvote a post of different user', async () => {
@@ -326,7 +326,7 @@ describe('Posts Endpoints', () => {
       expect(res.body).toHaveProperty('id')
     })
 
-    test('should not downvote their own post', async () => {
+    test('should downvote their own post', async () => {
       const vote = {
         postId: createdPostId,
         type: 'downvote',
@@ -334,7 +334,7 @@ describe('Posts Endpoints', () => {
 
       const res = await agent.post('/api/v1/posts/vote').send(vote)
 
-      expect(res.status).toBe(403)
+      expect(res.status).toBe(200)
     })
 
     test('should upvote a comment of different user', async () => {
@@ -351,7 +351,7 @@ describe('Posts Endpoints', () => {
       expect(res.body).toHaveProperty('id')
     })
 
-    test('should not upvote their own comment', async () => {
+    test('should upvote their own comment', async () => {
       const vote = {
         commentId: createdCommentId,
         type: 'upvote',
@@ -359,7 +359,7 @@ describe('Posts Endpoints', () => {
 
       const res = await agent.post('/api/v1/posts/vote').send(vote)
 
-      expect(res.status).toBe(403)
+      expect(res.status).toBe(200)
     })
 
     test('should downvote a comment of different user', async () => {
@@ -376,7 +376,7 @@ describe('Posts Endpoints', () => {
       expect(res.body).toHaveProperty('id')
     })
 
-    test('should not downvote their own comment', async () => {
+    test('should downvote their own comment', async () => {
       const vote = {
         commentId: createdCommentId,
         type: 'downvote',
@@ -384,7 +384,7 @@ describe('Posts Endpoints', () => {
 
       const res = await agent.post('/api/v1/posts/vote').send(vote)
 
-      expect(res.status).toBe(403)
+      expect(res.status).toBe(200)
     })
 
     test('should return error when not authenticated', async () => {

@@ -74,6 +74,7 @@ export const posts = pgTable('posts', {
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   isDead: boolean('is_dead').notNull().default(false),
+  mediaKey: text('media_key'),
   nextScoreUpdate: timestamp('next_score_update'),
   score: real('score'),
   scoreUpdatedAt: timestamp('score_updated_at'),

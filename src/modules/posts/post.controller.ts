@@ -10,12 +10,15 @@ import {
   AuthenticationError,
   ValidationError,
 } from '../../shared/errors/index.js'
+import MediaService from '../media/media.service.js'
 import PostService from './post.service.js'
 
 class PostController {
+  private readonly mediaService: MediaService
   private readonly postService: PostService
 
   constructor() {
+    this.mediaService = new MediaService()
     this.postService = new PostService()
   }
 
@@ -54,14 +57,21 @@ class PostController {
 
   createPost = async (req: Request, res: Response) => {
     const { content, topics } = req.body as CreatePostInput
+    const file = req.file
     const user = req.session.user
 
     if (!user) {
       throw new AuthenticationError('No user id found')
     }
 
+    let mediaKey: string | undefined
+    if (file) {
+      mediaKey = await this.mediaService.uploadImage(file)
+    }
+
     const post = await this.postService.createPost({
       content,
+      mediaKey,
       topics,
       userId: user.id,
     })

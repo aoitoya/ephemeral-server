@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, inArray, sql } from 'drizzle-orm'
 
 import { db } from '../../db/connection.js'
 import {
@@ -35,7 +35,8 @@ export interface CreateCommentReplyInput {
 
 export interface CreatePostInput {
   content: string
-  topics: string[]
+  mediaKey?: string
+  topics?: string[]
   userId: string
 }
 
@@ -84,7 +85,10 @@ class PostService {
   }
 
   async createPost(input: CreatePostInput) {
-    const [post] = await db.insert(posts).values(input).returning()
+    const [post] = await db
+      .insert(posts)
+      .values({ ...input, topics: input.topics ?? [] })
+      .returning()
     return post
   }
 
@@ -159,6 +163,7 @@ class PostService {
         createdAt: posts.createdAt,
         downvotes: posts.downvotes,
         id: posts.id,
+        mediaKey: posts.mediaKey,
         score: posts.score,
         topics: posts.topics,
         upvotes: posts.upvotes,
@@ -168,14 +173,25 @@ class PostService {
       .leftJoin(commentCounts, eq(commentCounts.postId, posts.id))
       .leftJoin(users, eq(posts.userId, users.id))
 
-    if (currentUserId) {
-      query.leftJoin(
-        votes,
-        and(eq(votes.postId, posts.id), eq(votes.userId, currentUserId))
-      )
-    }
+    const rows = await query.orderBy(desc(posts.createdAt), desc(posts.score))
 
-    const rows = await query.orderBy(desc(posts.score))
+    if (currentUserId) {
+      const postIds = rows.map((r) => r.id)
+      if (postIds.length > 0) {
+        const userVotes = await db
+          .select({ postId: votes.postId, type: votes.type })
+          .from(votes)
+          .where(
+            and(eq(votes.userId, currentUserId), inArray(votes.postId, postIds))
+          )
+
+        const voteMap = new Map(userVotes.map((v) => [v.postId, v.type]))
+        return rows.map((row) => ({
+          ...row,
+          userVote: voteMap.get(row.id) ?? null,
+        }))
+      }
+    }
 
     return rows
   }
@@ -197,11 +213,6 @@ class PostService {
           throw new NotFoundError(
             isPostVote ? 'Post not found' : 'Comment not found'
           )
-        }
-
-        const content = contentResults[0]
-        if (content.userId === userId) {
-          throw new AuthorizationError('Cannot vote on your own content')
         }
 
         const voteCondition = isPostVote

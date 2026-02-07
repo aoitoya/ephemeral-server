@@ -1,6 +1,7 @@
 import { Router } from 'express'
 
 import { authenticateToken } from '../../middleware/auth.middleware.js'
+import { uploadImage } from '../../middleware/upload.middleware.js'
 import { validateRequestBody } from '../../middleware/validate.middleware.js'
 import PostController from './post.controller.js'
 import {
@@ -15,6 +16,7 @@ const postController = new PostController()
 postRouter.post(
   '/',
   authenticateToken,
+  uploadImage.single('file'),
   validateRequestBody(createPostSchema),
   postController.createPost
 )

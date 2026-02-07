@@ -6,12 +6,8 @@ meta {
 
 post {
   url: {{baseurl}}/api/v1/posts
-  body: json
-  auth: bearer
-}
-
-auth:bearer {
-  token: {{auth_token}}
+  body: multipartForm
+  auth: inherit
 }
 
 body:json {
@@ -21,8 +17,10 @@ body:json {
   }
 }
 
-vars:pre-request {
-  auth_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyYjc1Y2YzMi1kNjZmLTRjZmMtOTA4OC1iM2ExZDlhNDNlNmEiLCJpYXQiOjE3NzAzNDU3MTQsImV4cCI6MTc3MDM0OTMxNH0.lnwfbsfKI0b8yyj6HODklNPzPghwe4BK_bJG2YIeNzM
+body:multipart-form {
+  content: loloake
+  topics: 
+  file: @file(/home/toya/Downloads/_.jpeg)
 }
 
 settings {

@@ -30,9 +30,34 @@ export const createVoteSchema = z
 
 export const createPostSchema = z.object({
   content: z.string().min(1, 'Content cannot be empty'),
+  mediaKey: z.string().optional(),
   topics: z
-    .array(z.string().min(1, 'Topic cannot be empty'))
-    .min(1, 'At least one topic is required'),
+    .union([
+      z.array(z.string().min(1, 'Topic cannot be empty')),
+      z.string().transform((str, ctx) => {
+        try {
+          const parsed = JSON.parse(str) as unknown
+          if (!Array.isArray(parsed)) {
+            ctx.addIssue({
+              code: 'custom',
+              message: 'Expected array, received string',
+            })
+            return z.NEVER
+          }
+          const validated = z
+            .array(z.string().min(1, 'Topic cannot be empty'))
+            .parse(parsed)
+          return validated
+        } catch {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Invalid JSON array format',
+          })
+          return z.NEVER
+        }
+      }),
+    ])
+    .optional(),
 })
 
 export type CreateCommentInput = z.infer<typeof createCommentSchema>
