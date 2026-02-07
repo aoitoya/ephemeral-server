@@ -54,6 +54,13 @@ export class RateLimitError extends AppError {
   }
 }
 
+export class ServiceUnavailableError extends AppError {
+  constructor(message: string) {
+    super(message, 503, 'SERVICE_UNAVAILABLE')
+    this.name = 'ServiceUnavailableError'
+  }
+}
+
 export class ValidationError extends AppError {
   constructor(message: string) {
     super(message, 400, 'VALIDATION_ERROR')

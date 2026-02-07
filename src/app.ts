@@ -11,6 +11,7 @@ import errorHandler from './middleware/errorHandler.js'
 import { globalLimiter } from './middleware/rateLimit.middleware.js'
 import { sessionMiddleware } from './middleware/session.middleware.js'
 import connectionRouter from './modules/connections/connection.routes.js'
+import mediaRouter from './modules/media/media.routes.js'
 import postRouter from './modules/posts/post.routes.js'
 import userRouter from './modules/users/user.routes.js'
 
@@ -62,6 +63,7 @@ app.use(cookieParser())
 app.use('/api/v1/users', userRouter)
 app.use('/api/v1/posts', postRouter)
 app.use('/api/v1/connections', authenticateToken, connectionRouter)
+app.use('/api/v1/media', mediaRouter)
 
 app.use(errorHandler)
 
