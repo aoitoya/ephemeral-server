@@ -1,0 +1,20 @@
+meta {
+  name: upload image
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseurl}}/api/v1/media/upload/image
+  body: multipartForm
+  auth: inherit
+}
+
+body:multipart-form {
+  file: @file(/home/toya/Downloads/_.jpeg)
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
