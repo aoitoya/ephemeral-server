@@ -34,6 +34,7 @@ export const authenticateToken = (
       return res.status(401).json({ error: 'Unauthorized: invalid token' })
     }
   } catch (error) {
+    console.log(token)
     console.log(error)
     return res.status(401).json({ error: 'Unauthorized: error token' })
   }
