@@ -229,6 +229,7 @@ describe('Users Endpoints', () => {
 
   describe('POST /refresh-token', () => {
     let cookies: string[]
+    let csrfToken: string
 
     beforeAll(async () => {
       await TestHelpers.createTestUser()
@@ -239,12 +240,14 @@ describe('Users Endpoints', () => {
         .post('/api/v1/users/login')
         .send(TestHelpers.testUser)
       cookies = TestHelpers.extractCookies(res.headers['set-cookie'])
+      csrfToken = TestHelpers.extractCsrfToken(cookies)
     })
 
     test('should refresh token with valid refresh token', async () => {
       const res = await supertest(app)
         .post('/api/v1/users/refresh-token')
         .set('Cookie', cookies)
+        .set('x-xsrf-token', csrfToken)
 
       expect(res.status).toBe(200)
       expect(res.body).toHaveProperty('token')
@@ -253,8 +256,15 @@ describe('Users Endpoints', () => {
     })
 
     test('should return error when refresh token is missing', async () => {
-      const res = await supertest(app).post('/api/v1/users/refresh-token')
-      TestHelpers.assertAuthError(res)
+      const cookiesWithoutRefresh = cookies.filter(
+        (cookie) => !cookie.startsWith('refreshToken=')
+      )
+      const res = await supertest(app)
+        .post('/api/v1/users/refresh-token')
+        .set('Cookie', cookiesWithoutRefresh)
+        .set('x-xsrf-token', csrfToken)
+
+      expect(res.status).toBe(401)
     })
   })
 

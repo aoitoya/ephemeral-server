@@ -27,34 +27,8 @@ class UserController {
 
     req.session.user = { id: user.id, username: user.username }
 
-    const accessToken = generateAccessToken({
-      id: user.id,
-    })
-    const refreshToken = generateRefreshToken()
-    const expiresAt = new Date(Date.now() + env.REFRESH_EXPIRES_IN * 1000)
-
-    await tokenRepository.save(
-      user.id,
-      refreshToken,
-      expiresAt,
-      req.get('user-agent')
-    )
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      maxAge: env.REFRESH_EXPIRES_IN * 1000,
-      path: '/',
-      sameSite: 'strict',
-      secure: env.NODE_ENV === 'production',
-    })
-
-    res.cookie('XSRF-TOKEN', generateCsrfToken(), {
-      httpOnly: false,
-      maxAge: env.REFRESH_EXPIRES_IN * 1000,
-      path: '/',
-      sameSite: 'strict',
-      secure: env.NODE_ENV === 'production',
-    })
+    const accessToken = generateAccessToken({ id: user.id })
+    await this.setAuthCookies(res, user.id, req.get('user-agent'))
 
     res.status(200).json({
       ...user,
@@ -100,12 +74,11 @@ class UserController {
 
     req.session.user = { id: user.id, username: user.username }
 
+    const accessToken = generateAccessToken({ id: user.id })
     const newRefreshToken = generateRefreshToken()
     const expiresAt = new Date(Date.now() + env.REFRESH_EXPIRES_IN * 1000)
 
     await tokenRepository.rotateToken(refreshToken, newRefreshToken, expiresAt)
-
-    const accessToken = generateAccessToken({ id: oldRefreshToken.userId })
 
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
@@ -134,18 +107,25 @@ class UserController {
 
     req.session.user = { id: user.id, username: user.username }
 
-    const accessToken = generateAccessToken({
-      id: user.id,
-    })
-    const refreshToken = generateRefreshToken()
-    const expiresAt = new Date(Date.now() + env.REFRESH_EXPIRES_IN * 1000)
+    const accessToken = generateAccessToken({ id: user.id })
+    await this.setAuthCookies(res, user.id, req.get('user-agent'))
 
-    await tokenRepository.save(
-      user.id,
-      refreshToken,
-      expiresAt,
-      req.get('user-agent')
-    )
+    res.status(201).json({
+      ...user,
+      expiresAt: Date.now() + env.JWT_ACCESS_EXPIRES_IN * 1000,
+      token: accessToken,
+    })
+  }
+
+  private async setAuthCookies(
+    res: Response,
+    userId: string,
+    deviceInfo?: string
+  ) {
+    const expiresAt = new Date(Date.now() + env.REFRESH_EXPIRES_IN * 1000)
+    const refreshToken = generateRefreshToken()
+
+    await tokenRepository.save(userId, refreshToken, expiresAt, deviceInfo)
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -163,11 +143,7 @@ class UserController {
       secure: env.NODE_ENV === 'production',
     })
 
-    res.status(201).json({
-      ...user,
-      expiresAt: Date.now() + env.JWT_ACCESS_EXPIRES_IN * 1000,
-      token: accessToken,
-    })
+    return { expiresAt, refreshToken }
   }
 }
 
