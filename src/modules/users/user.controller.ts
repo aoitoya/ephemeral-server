@@ -96,6 +96,10 @@ class UserController {
       )
     }
 
+    const user = await this.userService.getUserById(oldRefreshToken.userId)
+
+    req.session.user = { id: user.id, username: user.username }
+
     const newRefreshToken = generateRefreshToken()
     const expiresAt = new Date(Date.now() + env.REFRESH_EXPIRES_IN * 1000)
 

@@ -12,6 +12,15 @@ class UserRepository {
     return result[0]
   }
 
+  async findById(userId: string): Promise<null | User> {
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1)
+    return result[0] ?? null
+  }
+
   async findByUsername(username: string): Promise<null | User> {
     const result = await db
       .select()
