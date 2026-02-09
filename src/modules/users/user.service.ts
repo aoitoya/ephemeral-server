@@ -12,6 +12,15 @@ class UserService {
     this.userRepository = new UserRepository()
   }
 
+  async getUserById(userId: string): Promise<Pick<User, 'id' | 'username'>> {
+    const user = await this.userRepository.findById(userId)
+    if (!user) {
+      throw new AuthenticationError('User not found', 'USER_NOT_FOUND')
+    }
+    const { password: _, ...userInfo } = user
+    return userInfo
+  }
+
   async login(data: LoginUser): Promise<Omit<User, 'password'>> {
     const user = await this.userRepository.findByUsername(data.username)
     if (!user) {
