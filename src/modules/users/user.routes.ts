@@ -21,6 +21,7 @@ userRouter.post(
   userController.login
 )
 userRouter.post('/refresh-token', authLimiter, userController.refreshToken)
+userRouter.post('/logout', authLimiter, userController.logout)
 
 userRouter.get('/me', authenticateToken, userController.getMe)
 

@@ -10,8 +10,8 @@ export class AppError extends Error {
 }
 
 export class AuthenticationError extends AppError {
-  constructor(message: string) {
-    super(message, 401, 'AUTHENTICATION_ERROR')
+  constructor(message: string, code = 'AUTHENTICATION_ERROR') {
+    super(message, 401, code)
     this.name = 'AuthenticationError'
   }
 }

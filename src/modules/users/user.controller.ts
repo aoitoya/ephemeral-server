@@ -43,6 +43,7 @@ class UserController {
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       maxAge: env.REFRESH_EXPIRES_IN * 1000,
+      path: '/',
       sameSite: 'strict',
       secure: env.NODE_ENV === 'production',
     })
@@ -50,6 +51,7 @@ class UserController {
     res.cookie('XSRF-TOKEN', generateCsrfToken(), {
       httpOnly: false,
       maxAge: env.REFRESH_EXPIRES_IN * 1000,
+      path: '/',
       sameSite: 'strict',
       secure: env.NODE_ENV === 'production',
     })
@@ -59,6 +61,23 @@ class UserController {
       expiresAt: Date.now() + env.JWT_ACCESS_EXPIRES_IN * 1000,
       token: accessToken,
     })
+  }
+
+  logout = async (req: Request, res: Response) => {
+    const refreshToken = req.cookies.refreshToken as string
+
+    if (refreshToken) {
+      await tokenRepository.revokeToken(refreshToken)
+    }
+
+    req.session.destroy(() => {
+      // Session destruction is async, we don't need to wait for it
+    })
+
+    res.clearCookie('refreshToken', { path: '/' })
+    res.clearCookie('XSRF-TOKEN', { path: '/' })
+
+    res.status(200).json({ message: 'Logged out successfully' })
   }
 
   refreshToken = async (req: Request, res: Response) => {
@@ -71,7 +90,10 @@ class UserController {
     const oldRefreshToken = await tokenRepository.getValidToken(refreshToken)
 
     if (!oldRefreshToken) {
-      throw new AuthenticationError('Invalid refresh token')
+      throw new AuthenticationError(
+        'Invalid refresh token',
+        'INVALID_REFRESH_TOKEN'
+      )
     }
 
     const newRefreshToken = generateRefreshToken()
@@ -84,7 +106,7 @@ class UserController {
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
       maxAge: env.REFRESH_EXPIRES_IN * 1000,
-      path: '/refresh-token',
+      path: '/',
       sameSite: 'strict',
       secure: env.NODE_ENV === 'production',
     })
@@ -124,6 +146,7 @@ class UserController {
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       maxAge: env.REFRESH_EXPIRES_IN * 1000,
+      path: '/',
       sameSite: 'strict',
       secure: env.NODE_ENV === 'production',
     })
@@ -131,6 +154,7 @@ class UserController {
     res.cookie('XSRF-TOKEN', generateCsrfToken(), {
       httpOnly: false,
       maxAge: env.REFRESH_EXPIRES_IN * 1000,
+      path: '/',
       sameSite: 'strict',
       secure: env.NODE_ENV === 'production',
     })
