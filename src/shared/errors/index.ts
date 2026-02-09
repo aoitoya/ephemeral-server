@@ -40,6 +40,13 @@ export class DatabaseError extends AppError {
   }
 }
 
+export class InvalidTokenError extends AppError {
+  constructor(message = 'Invalid token') {
+    super(message, 401, 'INVALID_TOKEN')
+    this.name = 'InvalidTokenError'
+  }
+}
+
 export class NotFoundError extends AppError {
   constructor(message: string) {
     super(message, 404, 'NOT_FOUND')
@@ -58,6 +65,13 @@ export class ServiceUnavailableError extends AppError {
   constructor(message: string) {
     super(message, 503, 'SERVICE_UNAVAILABLE')
     this.name = 'ServiceUnavailableError'
+  }
+}
+
+export class TokenExpiredError extends AppError {
+  constructor() {
+    super('Token has expired', 401, 'TOKEN_EXPIRED')
+    this.name = 'TokenExpiredError'
   }
 }
 
