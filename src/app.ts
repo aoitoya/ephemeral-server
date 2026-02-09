@@ -48,11 +48,30 @@ app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
+        connectSrc: ["'self'"],
         defaultSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        frameSrc: ["'none'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        mediaSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
       },
-      reportOnly: true,
+      reportOnly: env.NODE_ENV !== 'production',
       useDefaults: true,
     },
+    crossOriginEmbedderPolicy: false,
+    frameguard: {
+      action: 'deny',
+    },
+    hsts: {
+      includeSubDomains: true,
+      maxAge: 31536000,
+      preload: true,
+    },
+    xContentTypeOptions: true,
+    xDnsPrefetchControl: false,
   })
 )
 app.use(globalLimiter)
