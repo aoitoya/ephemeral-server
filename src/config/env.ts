@@ -10,6 +10,7 @@ const envSchema = z.object({
     .string()
     .regex(/^\d+$/, 'must be a numeric string')
     .transform(Number),
+  CORS_ORIGINS: z.string().optional().default('http://localhost:5173'),
   DATABASE_URL: z.string(),
   JWT_ACCESS_EXPIRES_IN: z
     .string()

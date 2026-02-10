@@ -17,11 +17,16 @@ import { errorHandler } from './shared/errorHandler.js'
 
 const app = express()
 
+const getCorsOrigins = (): string[] => {
+  const origins = env.CORS_ORIGINS.split(',').map((o) => o.trim())
+  return origins
+}
+
 const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization', 'x-xsrf-token'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  origin: ['http://localhost:5173'],
+  origin: getCorsOrigins(),
 }
 
 app.use(
