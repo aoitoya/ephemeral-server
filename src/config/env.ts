@@ -27,7 +27,7 @@ const envSchema = z.object({
     .string()
     .optional()
     .refine(
-      (val): val is string => {
+      (val) => {
         if (val === undefined) return true
         const origins = val.split(',').map((o) => o.trim())
         return origins.every((origin) => isValidUrl(origin))
