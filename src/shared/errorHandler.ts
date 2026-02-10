@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 
-import { AppError, DatabaseError } from './errors/index.js'
+import logger from '../config/logger.js'
+import { AppError } from './errors/index.js'
 
 export const handleAppError = (
   error: unknown,
@@ -9,18 +10,7 @@ export const handleAppError = (
   _next: NextFunction
 ): void => {
   if (error instanceof AppError) {
-    const response: {
-      error: {
-        code: string
-        message: string
-        originalError?: {
-          message: string
-          stack?: string
-        }
-        statusCode: number
-      }
-      success: boolean
-    } = {
+    const response = {
       error: {
         code: error.code,
         message: error.message,
@@ -29,20 +19,11 @@ export const handleAppError = (
       success: false,
     }
 
-    if (error instanceof DatabaseError && error.originalError) {
-      if (process.env.NODE_ENV === 'development') {
-        response.error.originalError = {
-          message: error.originalError.message,
-          stack: error.originalError.stack,
-        }
-      }
-    }
-
     res.status(error.statusCode).json(response)
     return
   }
 
-  console.error('Unexpected error:', error)
+  logger.error('Unexpected error:', error)
   res.status(500).json({
     error: {
       code: 'INTERNAL_ERROR',

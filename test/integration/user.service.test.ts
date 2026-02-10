@@ -38,7 +38,7 @@ describe('user service', () => {
         password: 'wrongpassword123',
         username: 'nonexistentuser',
       })
-    ).rejects.toThrow('User not found')
+    ).rejects.toThrow('Invalid username or password')
   })
 
   test('should throw error when login with wrong password', async () => {
@@ -48,7 +48,7 @@ describe('user service', () => {
         password: 'wrongpassword123',
         username: testUserInput.username,
       })
-    ).rejects.toThrow('Invalid password')
+    ).rejects.toThrow('Invalid username or password')
   })
 
   test('should throw error when registering duplicate user', async () => {
