@@ -18,7 +18,9 @@ import { errorHandler } from './shared/errorHandler.js'
 const app = express()
 
 const getCorsOrigins = (): string[] => {
-  const origins = env.CORS_ORIGINS.split(',').map((o) => o.trim())
+  const origins = env.CORS_ORIGINS.split(',')
+    .map((o) => o.trim())
+    .filter(Boolean)
   return origins
 }
 
