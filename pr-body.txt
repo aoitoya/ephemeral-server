@@ -1,0 +1,24 @@
+## Summary
+
+Refactors error handling in controllers to use centralized middleware instead of inline try/catch blocks.
+
+## Changes
+
+- **src/modules/media/media.controller.ts**: Removed redundant try/catch blocks. Errors now bubble up to the errorHandler middleware naturally. Added stream error handling for image downloads.
+
+- **src/shared/errorHandler.ts**: Added centralized multer.MulterError handling. Returns `FILE_TOO_LARGE` for LIMIT_FILE_SIZE, `FILE_UPLOAD_FAILED` for other multer errors.
+
+## Benefits
+
+- Controllers are cleaner (parse request, format response only)
+- Error handling centralized in one place
+- Consistent error responses for file uploads
+- Easier to modify error behavior globally
+
+## Tests
+
+All 67 tests pass.
+
+---
+
+Closes #21
