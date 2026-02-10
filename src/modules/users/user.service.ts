@@ -15,7 +15,7 @@ class UserService {
   async getUserById(userId: string): Promise<Pick<User, 'id' | 'username'>> {
     const user = await this.userRepository.findById(userId)
     if (!user) {
-      throw new AuthenticationError('User not found', 'USER_NOT_FOUND')
+      throw new AuthenticationError('User not found')
     }
     const { password: _, ...userInfo } = user
     return userInfo
@@ -24,11 +24,11 @@ class UserService {
   async login(data: LoginUser): Promise<Omit<User, 'password'>> {
     const user = await this.userRepository.findByUsername(data.username)
     if (!user) {
-      throw new AuthenticationError('User not found', 'USER_NOT_FOUND')
+      throw new AuthenticationError('Invalid username or password')
     }
     const isPasswordValid = await bcrypt.compare(data.password, user.password)
     if (!isPasswordValid) {
-      throw new AuthenticationError('Invalid password', 'INVALID_PASSWORD')
+      throw new AuthenticationError('Invalid username or password')
     }
     const { password: _, ...userInfo } = user
 

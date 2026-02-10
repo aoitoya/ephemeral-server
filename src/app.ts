@@ -7,13 +7,13 @@ import { pinoHttp } from 'pino-http'
 
 import env from './config/env.js'
 import { authenticateToken } from './middleware/auth.middleware.js'
-import errorHandler from './middleware/errorHandler.js'
 import { globalLimiter } from './middleware/rateLimit.middleware.js'
 import { sessionMiddleware } from './middleware/session.middleware.js'
 import connectionRouter from './modules/connections/connection.routes.js'
 import mediaRouter from './modules/media/media.routes.js'
 import postRouter from './modules/posts/post.routes.js'
 import userRouter from './modules/users/user.routes.js'
+import { errorHandler } from './shared/errorHandler.js'
 
 const app = express()
 

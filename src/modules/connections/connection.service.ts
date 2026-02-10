@@ -1,4 +1,5 @@
 import { Connection } from '../../db/schema.js'
+import { NotFoundError } from '../../shared/errors/index.js'
 import NotificationService from '../notifications/notification.socket.js'
 import { ConnectionRepository } from './connection.repository.js'
 
@@ -41,7 +42,7 @@ export class ConnectionService {
     )
 
     if (!connection) {
-      throw new Error('Connection not found')
+      throw new NotFoundError('Connection not found')
     }
 
     return await this.connectionRepository.updateConnection(connectionId, {
@@ -102,7 +103,9 @@ export class ConnectionService {
     )
 
     if (!connection) {
-      throw new Error('Connection request not found or already processed')
+      throw new NotFoundError(
+        'Connection request not found or already processed'
+      )
     }
 
     if (action === 'accept') {
