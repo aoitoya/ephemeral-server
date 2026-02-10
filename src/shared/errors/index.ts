@@ -1,3 +1,5 @@
+export type TokenErrorType = 'EXPIRED' | 'INVALID'
+
 export class AppError extends Error {
   constructor(
     message: string,
@@ -40,13 +42,6 @@ export class DatabaseError extends AppError {
   }
 }
 
-export class InvalidTokenError extends AppError {
-  constructor(message = 'Invalid token') {
-    super(message, 401, 'INVALID_TOKEN')
-    this.name = 'InvalidTokenError'
-  }
-}
-
 export class NotFoundError extends AppError {
   constructor(message: string) {
     super(message, 404, 'NOT_FOUND')
@@ -68,10 +63,14 @@ export class ServiceUnavailableError extends AppError {
   }
 }
 
-export class TokenExpiredError extends AppError {
-  constructor() {
-    super('Token has expired', 401, 'TOKEN_EXPIRED')
-    this.name = 'TokenExpiredError'
+export class TokenError extends AppError {
+  constructor(
+    message = 'Token error',
+    public tokenErrorType: TokenErrorType = 'INVALID'
+  ) {
+    const code = tokenErrorType === 'EXPIRED' ? 'TOKEN_EXPIRED' : 'TOKEN_ERROR'
+    super(message, 401, code)
+    this.name = 'TokenError'
   }
 }
 
