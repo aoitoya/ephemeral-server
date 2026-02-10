@@ -60,7 +60,7 @@ const env = {
     (parsedEnv.NODE_ENV === 'production' ? '' : 'http://localhost:5173'),
 }
 
-if (parsedEnv.NODE_ENV === 'production' && parsedEnv.CORS_ORIGINS === '') {
+if (parsedEnv.NODE_ENV === 'production' && !env.CORS_ORIGINS) {
   throw new Error('CORS_ORIGINS is required in production')
 }
 
