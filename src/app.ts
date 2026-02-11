@@ -51,17 +51,7 @@ app.use(
 )
 
 app.use(cors(corsOptions))
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-      },
-      reportOnly: true,
-      useDefaults: true,
-    },
-  })
-)
+app.use(helmet())
 app.use(globalLimiter)
 app.use(sessionMiddleware)
 app.use(express.json())

@@ -14,11 +14,6 @@ const containsLocalhost = (origin: string): boolean => {
 }
 
 const envSchema = z.object({
-  AWS_ACCESS_KEY_ID: z.string().optional(),
-  AWS_ENDPOINT: z.string().optional(),
-  AWS_REGION: z.string().optional(),
-  AWS_S3_BUCKET: z.string().optional(),
-  AWS_SECRET_ACCESS_KEY: z.string().optional(),
   BCRYPT_ROUNDS: z
     .string()
     .regex(/^\d+$/, 'must be a numeric string')
@@ -48,6 +43,11 @@ const envSchema = z.object({
     .string()
     .regex(/^\d+$/, 'must be a numeric string')
     .transform(Number),
+  S3_ACCESS_KEY_ID: z.string().optional(),
+  S3_BUCKET: z.string().optional(),
+  S3_ENDPOINT: z.string().optional(),
+  S3_REGION: z.string().optional(),
+  S3_SECRET_ACCESS_KEY: z.string().optional(),
   SESSION_SECRET: z.string().min(32),
 })
 

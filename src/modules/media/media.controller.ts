@@ -37,6 +37,7 @@ class MediaController {
 
     res.setHeader('Content-Type', contentType)
     res.setHeader('Content-Disposition', `inline; filename="${sanitizedKey}"`)
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
 
     const readable = Readable.fromWeb(stream)
     readable.on('error', (error) => {
