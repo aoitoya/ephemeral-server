@@ -26,7 +26,7 @@ export class MediaService {
     try {
       const response = await _getS3Client().send(
         new GetObjectCommand({
-          Bucket: env.AWS_S3_BUCKET,
+          Bucket: env.S3_BUCKET,
           Key: key,
         })
       )
@@ -70,7 +70,7 @@ export class MediaService {
         client: _getS3Client(),
         params: {
           Body: stream,
-          Bucket: env.AWS_S3_BUCKET,
+          Bucket: env.S3_BUCKET,
           ContentType: file.mimetype,
           Key: key,
         },
@@ -108,22 +108,22 @@ export class MediaService {
 function _getS3Client(): S3Client {
   if (!_s3Client) {
     if (
-      !env.AWS_ACCESS_KEY_ID ||
-      !env.AWS_SECRET_ACCESS_KEY ||
-      !env.AWS_REGION ||
-      !env.AWS_S3_BUCKET
+      !env.S3_ACCESS_KEY_ID ||
+      !env.S3_SECRET_ACCESS_KEY ||
+      !env.S3_REGION ||
+      !env.S3_BUCKET
     ) {
       throw new ServiceUnavailableError('Media service is not configured')
     }
 
     _s3Client = new S3Client({
       credentials: {
-        accessKeyId: env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
+        accessKeyId: env.S3_ACCESS_KEY_ID,
+        secretAccessKey: env.S3_SECRET_ACCESS_KEY,
       },
-      endpoint: env.AWS_ENDPOINT,
+      endpoint: env.S3_ENDPOINT,
       forcePathStyle: true,
-      region: env.AWS_REGION,
+      region: env.S3_REGION,
     })
   }
   return _s3Client

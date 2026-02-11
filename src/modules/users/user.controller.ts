@@ -84,7 +84,7 @@ class UserController {
       httpOnly: true,
       maxAge: env.REFRESH_EXPIRES_IN * 1000,
       path: '/',
-      sameSite: 'strict',
+      sameSite: 'none',
       secure: env.NODE_ENV === 'production',
     })
 
@@ -92,7 +92,7 @@ class UserController {
       httpOnly: false,
       maxAge: env.REFRESH_EXPIRES_IN * 1000,
       path: '/',
-      sameSite: 'strict',
+      sameSite: 'none',
       secure: env.NODE_ENV === 'production',
     })
 
@@ -131,7 +131,7 @@ class UserController {
       httpOnly: true,
       maxAge: env.REFRESH_EXPIRES_IN * 1000,
       path: '/',
-      sameSite: 'strict',
+      sameSite: 'none',
       secure: env.NODE_ENV === 'production',
     })
 
@@ -139,7 +139,7 @@ class UserController {
       httpOnly: false,
       maxAge: env.REFRESH_EXPIRES_IN * 1000,
       path: '/',
-      sameSite: 'strict',
+      sameSite: 'none',
       secure: env.NODE_ENV === 'production',
     })
 
