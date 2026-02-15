@@ -3,7 +3,7 @@ import supertest from 'supertest'
 import { beforeAll, describe, expect, test } from 'vitest'
 
 import app from '../../src/app.js'
-import { PostCreateRespones, UserResponse } from './types.js'
+import { PostCreateRespones } from './types.js'
 
 const getAuthenticatedAgent = async () => {
   const testUser = {
@@ -13,13 +13,8 @@ const getAuthenticatedAgent = async () => {
 
   const agent = supertest.agent(app)
   await agent.post('/api/v1/users/register').send(testUser)
+  await agent.post('/api/v1/users/login').send(testUser)
   const res = await agent.post('/api/v1/users/login').send(testUser)
-  const body = res.body as UserResponse
-  if (typeof body.token === 'string') {
-    agent.set('Authorization', `Bearer ${body.token}`)
-  } else {
-    throw new Error('Login response missing valid token')
-  }
   const cookies: unknown = res.headers['set-cookie']
   if (cookies && Array.isArray(cookies)) {
     const cookieArray = cookies as string[]

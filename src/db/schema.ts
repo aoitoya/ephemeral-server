@@ -2,9 +2,7 @@ import { relations, sql } from 'drizzle-orm'
 import {
   AnyPgColumn,
   boolean,
-  char,
   check,
-  index,
   integer,
   json,
   pgEnum,
@@ -194,25 +192,6 @@ export const engagementHourly = pgTable(
   (t) => [primaryKey({ columns: [t.postId, t.hour] })]
 )
 
-export const refreshTokens = pgTable(
-  'refresh_tokens',
-  {
-    deviceInfo: text('device_info'),
-    expiresAt: timestamp('expires_at').notNull(),
-    id: uuid('id')
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
-    issuedAt: timestamp('issued_at').defaultNow().notNull(),
-    revoked: boolean('revoked').default(false).notNull(),
-    tokenHash: char('token_hash', { length: 64 }).notNull().unique(),
-    userId: uuid('user_id').notNull(),
-  },
-  (table) => [
-    index('idx_refresh_user').on(table.userId),
-    index('idx_refresh_expires').on(table.expiresAt),
-  ]
-)
-
 export const configs = pgTable('configs', {
   key: text('key').primaryKey(),
   value: text('value'),
@@ -258,6 +237,5 @@ export type NewConnection = typeof connections.$inferInsert
 export type NewPost = Omit<typeof posts.$inferInsert, 'createdAt' | 'id'>
 export type NewUser = Omit<typeof users.$inferInsert, 'createdAt' | 'id'>
 export type Post = typeof posts.$inferSelect
-export type RefreshToken = typeof refreshTokens.$inferSelect
 export type User = typeof users.$inferSelect
 export type Vote = typeof votes.$inferSelect

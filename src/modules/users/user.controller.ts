@@ -2,14 +2,10 @@ import { Request, Response } from 'express'
 
 import env from '../../config/env.js'
 import { type LoginUser, type NewUser } from '../../db/schema.js'
-import tokenRepository from '../../repositories/token.repository.js'
-import { AuthenticationError } from '../../shared/errors/index.js'
-import {
-  generateAccessToken,
-  generateCsrfToken,
-  generateRefreshToken,
-} from '../../utils/token.js'
+import { generateCsrfToken } from '../../utils/token.js'
 import UserService from './user.service.js'
+
+const isProduction = env.NODE_ENV === 'production'
 
 class UserController {
   private userService: UserService
@@ -27,79 +23,26 @@ class UserController {
 
     req.session.user = { id: user.id, username: user.username }
 
-    const accessToken = generateAccessToken({ id: user.id })
-    await this.setAuthCookies(res, user.id, req.get('user-agent'))
-
-    res.status(200).json({
-      ...user,
-      expiresAt: Date.now() + env.JWT_ACCESS_EXPIRES_IN * 1000,
-      token: accessToken,
+    res.cookie('XSRF-TOKEN', generateCsrfToken(), {
+      httpOnly: false,
+      path: '/',
+      sameSite: isProduction ? 'none' : 'lax',
+      secure: isProduction,
     })
+
+    res.status(200).json(user)
   }
 
-  logout = async (req: Request, res: Response) => {
-    const refreshToken = req.cookies.refreshToken as string
-
-    if (refreshToken) {
-      await tokenRepository.revokeToken(refreshToken)
-    }
-
-    req.session.destroy(() => {
-      // Session destruction is async, we don't need to wait for it
+  logout = (req: Request, res: Response) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destroy error:', err)
+      }
     })
 
-    res.clearCookie('refreshToken', { path: '/' })
     res.clearCookie('XSRF-TOKEN', { path: '/' })
 
     res.status(200).json({ message: 'Logged out successfully' })
-  }
-
-  refreshToken = async (req: Request, res: Response) => {
-    const refreshToken = req.cookies.refreshToken as string
-
-    if (!refreshToken) {
-      throw new AuthenticationError('No refresh token provided')
-    }
-
-    const oldRefreshToken = await tokenRepository.getValidToken(refreshToken)
-
-    if (!oldRefreshToken) {
-      throw new AuthenticationError(
-        'Invalid refresh token',
-        'INVALID_REFRESH_TOKEN'
-      )
-    }
-
-    const user = await this.userService.getUserById(oldRefreshToken.userId)
-
-    req.session.user = { id: user.id, username: user.username }
-
-    const accessToken = generateAccessToken({ id: user.id })
-    const newRefreshToken = generateRefreshToken()
-    const expiresAt = new Date(Date.now() + env.REFRESH_EXPIRES_IN * 1000)
-
-    await tokenRepository.rotateToken(refreshToken, newRefreshToken, expiresAt)
-
-    res.cookie('refreshToken', newRefreshToken, {
-      httpOnly: true,
-      maxAge: env.REFRESH_EXPIRES_IN * 1000,
-      path: '/',
-      sameSite: 'none',
-      secure: env.NODE_ENV === 'production',
-    })
-
-    res.cookie('XSRF-TOKEN', generateCsrfToken(), {
-      httpOnly: false,
-      maxAge: env.REFRESH_EXPIRES_IN * 1000,
-      path: '/',
-      sameSite: 'none',
-      secure: env.NODE_ENV === 'production',
-    })
-
-    res.json({
-      expiresIn: env.JWT_ACCESS_EXPIRES_IN,
-      token: accessToken,
-    })
   }
 
   register = async (req: Request<unknown, unknown, NewUser>, res: Response) => {
@@ -107,43 +50,14 @@ class UserController {
 
     req.session.user = { id: user.id, username: user.username }
 
-    const accessToken = generateAccessToken({ id: user.id })
-    await this.setAuthCookies(res, user.id, req.get('user-agent'))
-
-    res.status(201).json({
-      ...user,
-      expiresAt: Date.now() + env.JWT_ACCESS_EXPIRES_IN * 1000,
-      token: accessToken,
-    })
-  }
-
-  private async setAuthCookies(
-    res: Response,
-    userId: string,
-    deviceInfo?: string
-  ) {
-    const expiresAt = new Date(Date.now() + env.REFRESH_EXPIRES_IN * 1000)
-    const refreshToken = generateRefreshToken()
-
-    await tokenRepository.save(userId, refreshToken, expiresAt, deviceInfo)
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      maxAge: env.REFRESH_EXPIRES_IN * 1000,
-      path: '/',
-      sameSite: 'none',
-      secure: env.NODE_ENV === 'production',
-    })
-
     res.cookie('XSRF-TOKEN', generateCsrfToken(), {
       httpOnly: false,
-      maxAge: env.REFRESH_EXPIRES_IN * 1000,
       path: '/',
-      sameSite: 'none',
-      secure: env.NODE_ENV === 'production',
+      sameSite: isProduction ? 'none' : 'lax',
+      secure: isProduction,
     })
 
-    return { expiresAt, refreshToken }
+    res.status(201).json(user)
   }
 }
 

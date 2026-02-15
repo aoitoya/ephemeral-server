@@ -32,17 +32,8 @@ const envSchema = z.object({
       }
     ),
   DATABASE_URL: z.string(),
-  JWT_ACCESS_EXPIRES_IN: z
-    .string()
-    .regex(/^\d+$/, 'must be a numeric string')
-    .transform(Number),
-  JWT_ACCESS_SECRET: z.string().min(32),
   NODE_ENV: z.enum(['development', 'production', 'test']),
   PORT: z.string().regex(/^\d+$/, 'must be a numeric string').transform(Number),
-  REFRESH_EXPIRES_IN: z
-    .string()
-    .regex(/^\d+$/, 'must be a numeric string')
-    .transform(Number),
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_BUCKET: z.string().optional(),
   S3_ENDPOINT: z.string().optional(),
