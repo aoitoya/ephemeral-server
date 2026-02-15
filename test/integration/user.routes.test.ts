@@ -39,7 +39,7 @@ const TestHelpers = {
   },
 
   assertForbiddenError(response: supertest.Response): void {
-    expect(response.status).toBe(403)
+    expect(response.status).toBe(401)
   },
 
   assertRegistrationSuccess(response: supertest.Response): void {

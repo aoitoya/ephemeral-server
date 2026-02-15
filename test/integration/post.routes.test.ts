@@ -74,7 +74,7 @@ describe('Posts Endpoints', () => {
 
     test('should return error when not authenticated', async () => {
       const res = await supertest(app).post('/api/v1/posts')
-      expect(res.status).toBe(403)
+      expect(res.status).toBe(401)
     })
 
     test('should return error with no payload', async () => {
@@ -159,7 +159,7 @@ describe('Posts Endpoints', () => {
 
     test('should return error when not authenticated', async () => {
       const res = await supertest(app).post('/api/v1/posts/comments')
-      expect(res.status).toBe(403)
+      expect(res.status).toBe(401)
     })
 
     test('should return error with no payload', async () => {
@@ -384,7 +384,7 @@ describe('Posts Endpoints', () => {
 
     test('should return error when not authenticated', async () => {
       const res = await supertest(app).post('/api/v1/posts/vote')
-      expect(res.status).toBe(403)
+      expect(res.status).toBe(401)
     })
 
     test('should return error with no payload', async () => {
