@@ -17,6 +17,8 @@ import { errorHandler } from './shared/errorHandler.js'
 
 const app = express()
 
+app.set('trust proxy', 1)
+
 const getCorsOrigins = (): string[] => {
   const origins = env.CORS_ORIGINS.split(',')
     .map((o) => o.trim())
@@ -51,7 +53,11 @@ app.use(
 )
 
 app.use(cors(corsOptions))
-app.use(helmet())
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+)
 app.use(globalLimiter)
 app.use(sessionMiddleware)
 app.use(express.json())
