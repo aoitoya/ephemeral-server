@@ -6,7 +6,6 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import app from '../../src/app.js'
 import { db } from '../../src/db/connection.js'
 import { users } from '../../src/db/schema.js'
-import { UserResponse } from './types.js'
 
 interface TestUser {
   password: string
@@ -30,13 +29,12 @@ const TestHelpers = {
       (a, b) => a.localeCompare(b)
     )
     expect(cookieArray[0].split('=')[0]).toBe('connect.sid')
-    expect(cookieArray[1].split('=')[0]).toBe('refreshToken')
-    expect(cookieArray[2].split('=')[0]).toBe('XSRF-TOKEN')
+    expect(cookieArray[1].split('=')[0]).toBe('XSRF-TOKEN')
   },
 
   assertCookieStructure(cookies: unknown): void {
     expect(cookies).toBeInstanceOf(Array)
-    expect(cookies).toHaveLength(3)
+    expect(cookies).toHaveLength(2)
     expect(cookies).toSatisfy((c: unknown) => TestHelpers.validateCookies(c))
   },
 
@@ -54,8 +52,6 @@ const TestHelpers = {
   assertUserResponse(body: unknown): void {
     expect(body).toHaveProperty('id')
     expect(body).toHaveProperty('username')
-    expect(body).toHaveProperty('token')
-    expect(body).toHaveProperty('expiresAt')
   },
 
   assertValidationError(response: supertest.Response): void {
@@ -227,50 +223,8 @@ describe('Users Endpoints', () => {
     })
   })
 
-  describe('POST /refresh-token', () => {
-    let cookies: string[]
-    let csrfToken: string
-
-    beforeAll(async () => {
-      await TestHelpers.createTestUser()
-      if (!TestHelpers.testUser) {
-        throw new Error('Test user not created')
-      }
-      const res = await supertest(app)
-        .post('/api/v1/users/login')
-        .send(TestHelpers.testUser)
-      cookies = TestHelpers.extractCookies(res.headers['set-cookie'])
-      csrfToken = TestHelpers.extractCsrfToken(cookies)
-    })
-
-    test('should refresh token with valid refresh token', async () => {
-      const res = await supertest(app)
-        .post('/api/v1/users/refresh-token')
-        .set('Cookie', cookies)
-        .set('x-xsrf-token', csrfToken)
-
-      expect(res.status).toBe(200)
-      expect(res.body).toHaveProperty('token')
-      expect(res.body).toHaveProperty('expiresIn')
-      expect(res.headers['set-cookie']).toBeDefined()
-    })
-
-    test('should return error when refresh token is missing', async () => {
-      const cookiesWithoutRefresh = cookies.filter(
-        (cookie) => !cookie.startsWith('refreshToken=')
-      )
-      const res = await supertest(app)
-        .post('/api/v1/users/refresh-token')
-        .set('Cookie', cookiesWithoutRefresh)
-        .set('x-xsrf-token', csrfToken)
-
-      expect(res.status).toBe(401)
-    })
-  })
-
   describe('GET /me', () => {
     let agent: supertest.Agent
-    let authToken: string
     let csrfToken: string
 
     beforeAll(async () => {
@@ -285,9 +239,6 @@ describe('Users Endpoints', () => {
         .send(TestHelpers.testUser)
       TestHelpers.assertUserResponse(res.body)
 
-      const userBody = res.body as UserResponse
-      authToken = userBody.token
-
       const cookies = TestHelpers.extractCookies(res.headers['set-cookie'])
       csrfToken = TestHelpers.extractCsrfToken(cookies)
     })
@@ -298,9 +249,7 @@ describe('Users Endpoints', () => {
       }
       const authRes = await agent
         .get('/api/v1/users/me')
-        .set('Authorization', `Bearer ${authToken}`)
         .set('x-xsrf-token', csrfToken)
-        .set('Cookie', `XSRF-TOKEN=${csrfToken}`)
 
       expect(authRes.status).toBe(200)
       expect(authRes.body).toHaveProperty('id')

@@ -1,8 +1,8 @@
 import type { NextFunction, Request, Response } from 'express'
 
-import logger from '../config/logger.js'
 import multer from 'multer'
 
+import logger from '../config/logger.js'
 import { AppError, DatabaseError } from './errors/index.js'
 
 export const handleAppError = (

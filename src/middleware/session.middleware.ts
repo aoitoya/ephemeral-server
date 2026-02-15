@@ -6,6 +6,8 @@ import env from '../config/env.js'
 
 const PgSession = connectPgSimple(session)
 
+const isProduction = env.NODE_ENV === 'production'
+
 export const pgPool = new Pool({
   connectionString: env.DATABASE_URL,
 })
@@ -14,8 +16,8 @@ export const sessionMiddleware = session({
   cookie: {
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000,
-    sameSite: 'lax',
-    secure: env.NODE_ENV === 'production',
+    sameSite: isProduction ? 'none' : 'lax',
+    secure: isProduction,
   },
   resave: false,
   saveUninitialized: false,
