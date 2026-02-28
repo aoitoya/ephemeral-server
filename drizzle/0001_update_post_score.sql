@@ -1,5 +1,5 @@
 -- Custom SQL migration file, put your code below! --
-CREATE OR REPLACE FUNCTION update_post_score() RETURNS JSONB AS $$
+CREATE OR REPLACE FUNCTION update_post_score () RETURNS JSONB AS $$
 
 DECLARE
   v_result JSONB;
@@ -7,7 +7,6 @@ DECLARE
   v_updated INTEGER := 0;
   v_avg_engagement DECIMAL;
   v_base_decay DECIMAL := 0.006;
-  v_hours_since_creation DECIMAL;
 BEGIN
   SELECT AVG(total_points)::DECIMAL INTO v_avg_engagement
   FROM (
@@ -23,9 +22,8 @@ BEGIN
   WITH posts_to_update AS (
     SELECT 
       p.id AS post_id,
-      p.created_at,
       p.life,
-      EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 AS hours_since_creation
+      EXTRACT(EPOCH FROM (NOW() - p.score_updated_at)) / 3600 AS hours_since_update
     FROM posts p
     WHERE p.life > 0
       AND (p.score_updated_at < NOW() - INTERVAL '10 minutes' OR p.next_score_update <= NOW())
@@ -37,7 +35,7 @@ BEGIN
     SELECT
       ptu.post_id,
       ptu.life,
-      ptu.hours_since_creation,
+      ptu.hours_since_update,
       COALESCE(curr.points, 0) AS current_pts,
       COALESCE(recent.points, 0) AS recent_pts,
       COALESCE(total.points, 0) AS total_pts,
@@ -72,7 +70,7 @@ BEGIN
     SELECT
       ce.post_id,
       GREATEST(0, LEAST(1.0,
-        ce.life - (v_base_decay * ce.hours_since_creation * (1 + LN(ce.engagement_multiplier)))
+        ce.life - (v_base_decay * ce.hours_since_update * (1 + LN(ce.engagement_multiplier)))
       )) AS new_life,
       ce.engagement
     FROM calculated_engagement ce
@@ -110,4 +108,4 @@ BEGIN
   );
 END;
 
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql ;
