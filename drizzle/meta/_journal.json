@@ -36,6 +36,20 @@
       "when": 1772288615494,
       "tag": "0004_add_post_life",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772288920430,
+      "tag": "0005_exotic_talos",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772291669554,
+      "tag": "0006_update_post_score_function",
+      "breakpoints": true
     }
   ]
 }
