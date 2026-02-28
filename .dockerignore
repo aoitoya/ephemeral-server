@@ -12,8 +12,6 @@ test
 coverage
 .drizzle
 drizzle.config.ts
-tsconfig.json
-!tsconfig.build.json
 eslint.config.mts
 .prettierrc*
 README.md
