@@ -36,3 +36,5 @@ src/
 ├── shared/       # Errors, utilities
 └── socket/       # Socket.IO handlers
 ```
+
+Frontend repo: https://github.com/aoitoya/ephemeral-client
