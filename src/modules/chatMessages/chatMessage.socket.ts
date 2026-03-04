@@ -53,20 +53,30 @@ class MessageService {
     this.initializeSocketEvents()
   }
 
-  private async broadcastActiveUsers(socket: Socket) {
+  /**
+   * Broadcasts the current user's online status to all their connections.
+   * When a user connects or disconnects, this notifies all connected contacts
+   * by emitting a 'user:active' event to each contact's socket room.
+   */
+  private async broadcastActiveUsers(socket: Socket, isOnline: boolean) {
+    // Get the authenticated user from the socket session
     const currentUser = (socket.request as AuthenticatedRequest).session.user
 
+    // Retrieve all connections that should receive the online status update
     const connections = await this.connectionService.getOnlineConnections(
       currentUser.id
     )
 
+    // Emit the active status to each connected user's room
     for (const connection of connections) {
+      // Look up the socket room ID for this connection
       const roomId = userSocketMap.get(connection.id)
 
+      // If the connection is currently connected, emit the active event
       if (roomId) {
-        this.io.to(roomId).emit('user:active', {
-          id: connection.id,
-          username: connection.username,
+        this.io.to(roomId).emit(isOnline ? 'user:online' : 'user:offline', {
+          id: currentUser.id,
+          username: currentUser.username,
         })
       }
     }
@@ -143,13 +153,13 @@ class MessageService {
       this.initializeChatHandler(socket)
       await this.setUserStatus(socket, true)
 
-      // Broadcast active users to all connections
-      await this.broadcastActiveUsers(socket)
+      // Broadcast user online to all connections
+      await this.broadcastActiveUsers(socket, true)
 
       socket.on('disconnect', async () => {
         await this.setUserStatus(socket, false)
-        // Broadcast updated active users to all connections
-        await this.broadcastActiveUsers(socket)
+        // Broadcast user offline to all connections
+        await this.broadcastActiveUsers(socket, false)
       })
     })
   }
