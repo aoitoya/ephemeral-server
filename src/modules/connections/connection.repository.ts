@@ -147,9 +147,11 @@ export class ConnectionRepository {
       .leftJoin(userB, eq(connections.userB, userB.id))
       .where(
         and(
-          or(eq(connections.userA, userId), eq(connections.userB, userId)),
-          eq(connections.status, 'active'),
-          and(eq(userA.isOnline, true), eq(userB.isOnline, true))
+          or(
+            and(eq(connections.userA, userId), eq(userB.isOnline, true)),
+            and(eq(connections.userB, userId), eq(userA.isOnline, true))
+          ),
+          eq(connections.status, 'active')
         )
       )
 

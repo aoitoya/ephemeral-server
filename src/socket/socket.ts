@@ -1,6 +1,8 @@
 import { Server as HTTPServer } from 'http'
 import { Server } from 'socket.io'
 
+import env from '../config/env.js'
+
 let io: null | Server = null
 
 export const userSocketMap = new Map<string, string>()
@@ -18,7 +20,9 @@ export function init(server: HTTPServer) {
       allowedHeaders: ['Content-Type', 'Authorization', 'x-xsrf-token'],
       credentials: true,
       methods: ['GET', 'POST', 'OPTIONS'],
-      origin: ['http://localhost:5173'],
+      origin: env.CORS_ORIGINS.split(',')
+        .filter(Boolean)
+        .map((e) => e.trim()),
     },
   })
   return io
