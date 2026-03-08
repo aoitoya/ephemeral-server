@@ -1,0 +1,15 @@
+
+
+> ephemeral-server@1.0.0 check-types /home/toya/projects/ephemeral-server/apps/server
+> tsc --noEmit
+
+[96msrc/modules/media/media.controller.ts[0m:[93m24[0m:[93m35[0m - [91merror[0m[90m TS2345: [0mArgument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+
+[7m24[0m     const sanitizedKey = basename(key)
+[7m  [0m [91m                                  ~~~[0m
+
+
+Found 1 error in src/modules/media/media.controller.ts[90m:24[0m
+
+[41m[30m ELIFECYCLE [39m[49m [31mCommand failed with exit code 2.[39m
