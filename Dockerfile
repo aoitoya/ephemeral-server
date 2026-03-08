@@ -3,10 +3,13 @@ RUN corepack enable && corepack prepare pnpm@10.16.0 --activate
 
 FROM base AS builder
 WORKDIR /app
+
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --ignore-scripts
+
 COPY tsconfig.build.json tsconfig.json ./
 COPY src ./src
+COPY frontend ./frontend
 RUN pnpm build
 
 FROM base AS runner
@@ -20,6 +23,7 @@ RUN adduser --system --uid 1001 nodejs
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
+COPY --from=builder /app/frontend/dist ./frontend/dist
 
 USER nodejs
 

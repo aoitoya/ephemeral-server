@@ -1,7 +1,10 @@
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express from 'express'
+import expressStaticGzip from 'express-static-gzip'
+import fs from 'fs'
 import helmet from 'helmet'
+import path from 'path'
 import pino from 'pino'
 import { pinoHttp } from 'pino-http'
 
@@ -63,10 +66,24 @@ app.use(sessionMiddleware)
 app.use(express.json())
 app.use(cookieParser())
 
+const frontendPath = path.join(process.cwd(), 'frontend', 'dist')
+if (!fs.existsSync(frontendPath)) {
+  console.warn('frontend files not found')
+} else {
+  app.use(expressStaticGzip(frontendPath, {}))
+}
 app.use('/api/v1/users', userRouter)
 app.use('/api/v1/posts', postRouter)
 app.use('/api/v1/connections', authenticateToken, connectionRouter)
 app.use('/api/v1/media', mediaRouter)
+
+app.use((_req, res, next) => {
+  if (_req.path.startsWith('/api/')) {
+    next()
+  } else {
+    res.sendFile(path.join(frontendPath, 'index.html'))
+  }
+})
 
 app.use(errorHandler)
 
