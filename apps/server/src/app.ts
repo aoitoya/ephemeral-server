@@ -1,90 +1,90 @@
-import cookieParser from 'cookie-parser'
-import cors from 'cors'
-import express from 'express'
-import expressStaticGzip from 'express-static-gzip'
-import fs from 'fs'
-import helmet from 'helmet'
-import path from 'path'
-import pino from 'pino'
-import { pinoHttp } from 'pino-http'
+import fs from "node:fs";
+import path from "node:path";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import express from "express";
+import expressStaticGzip from "express-static-gzip";
+import helmet from "helmet";
+import pino from "pino";
+import { pinoHttp } from "pino-http";
 
-import env from './config/env.js'
-import { authenticateToken } from './middleware/auth.middleware.js'
-import { globalLimiter } from './middleware/rateLimit.middleware.js'
-import { sessionMiddleware } from './middleware/session.middleware.js'
-import connectionRouter from './modules/connections/connection.routes.js'
-import mediaRouter from './modules/media/media.routes.js'
-import postRouter from './modules/posts/post.routes.js'
-import userRouter from './modules/users/user.routes.js'
-import { errorHandler } from './shared/errorHandler.js'
+import env from "./config/env.js";
+import { authenticateToken } from "./middleware/auth.middleware.js";
+import { globalLimiter } from "./middleware/rateLimit.middleware.js";
+import { sessionMiddleware } from "./middleware/session.middleware.js";
+import connectionRouter from "./modules/connections/connection.routes.js";
+import mediaRouter from "./modules/media/media.routes.js";
+import postRouter from "./modules/posts/post.routes.js";
+import userRouter from "./modules/users/user.routes.js";
+import { errorHandler } from "./shared/errorHandler.js";
 
-const app = express()
+const app = express();
 
-app.set('trust proxy', 1)
+app.set("trust proxy", 1);
 
 const getCorsOrigins = (): string[] => {
-  const origins = env.CORS_ORIGINS.split(',')
-    .map((o) => o.trim())
-    .filter(Boolean)
-  return origins
-}
+	const origins = env.CORS_ORIGINS.split(",")
+		.map((o) => o.trim())
+		.filter(Boolean);
+	return origins;
+};
 
 const corsOptions = {
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-xsrf-token'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  origin: getCorsOrigins(),
-}
+	allowedHeaders: ["Content-Type", "Authorization", "x-xsrf-token"],
+	credentials: true,
+	methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+	origin: getCorsOrigins(),
+};
 
 app.use(
-  pinoHttp({
-    logger: pino({
-      formatters: {
-        log: (obj) => ({
-          req: obj.req,
-        }),
-      },
-      redact: ['req.headers'],
-      transport:
-        env.NODE_ENV === 'development'
-          ? {
-              target: 'pino-pretty',
-            }
-          : undefined,
-    }),
-  })
-)
+	pinoHttp({
+		logger: pino({
+			formatters: {
+				log: (obj) => ({
+					req: obj.req,
+				}),
+			},
+			redact: ["req.headers"],
+			transport:
+				env.NODE_ENV === "development"
+					? {
+							target: "pino-pretty",
+						}
+					: undefined,
+		}),
+	}),
+);
 
-app.use(cors(corsOptions))
+app.use(cors(corsOptions));
 app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-  })
-)
-app.use(globalLimiter)
-app.use(sessionMiddleware)
-app.use(express.json())
-app.use(cookieParser())
+	helmet({
+		crossOriginResourcePolicy: { policy: "cross-origin" },
+	}),
+);
+app.use(globalLimiter);
+app.use(sessionMiddleware);
+app.use(express.json());
+app.use(cookieParser());
 
-const frontendPath = path.join(process.cwd(), 'frontend', 'dist')
+const frontendPath = env.FRONTEND_DIST ?? path.join(process.cwd(), "frontend", "dist");
 if (!fs.existsSync(frontendPath)) {
-  console.warn('frontend files not found')
+	console.warn("frontend files not found");
 } else {
-  app.use(expressStaticGzip(frontendPath, {}))
+	app.use(expressStaticGzip(frontendPath, {}));
 }
-app.use('/api/v1/users', userRouter)
-app.use('/api/v1/posts', postRouter)
-app.use('/api/v1/connections', authenticateToken, connectionRouter)
-app.use('/api/v1/media', mediaRouter)
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/posts", postRouter);
+app.use("/api/v1/connections", authenticateToken, connectionRouter);
+app.use("/api/v1/media", mediaRouter);
 
 app.use((_req, res, next) => {
-  if (_req.path.startsWith('/api/')) {
-    next()
-  } else {
-    res.sendFile(path.join(frontendPath, 'index.html'))
-  }
-})
+	if (_req.path.startsWith("/api/")) {
+		next();
+	} else {
+		res.sendFile(path.join(frontendPath, "index.html"));
+	}
+});
 
-app.use(errorHandler)
+app.use(errorHandler);
 
-export default app
+export default app;

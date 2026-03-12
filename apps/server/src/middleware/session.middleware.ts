@@ -1,30 +1,30 @@
-import connectPgSimple from 'connect-pg-simple'
-import session from 'express-session'
-import { Pool } from 'pg'
+import connectPgSimple from "connect-pg-simple";
+import session from "express-session";
+import { Pool } from "pg";
 
-import env from '../config/env.js'
+import env from "../config/env.js";
 
-const PgSession = connectPgSimple(session)
+const PgSession = connectPgSimple(session);
 
-const isProduction = env.NODE_ENV === 'production'
+const isProduction = env.NODE_ENV === "production";
 
 export const pgPool = new Pool({
-  connectionString: env.DATABASE_URL,
-})
+	connectionString: env.DATABASE_URL,
+});
 
 export const sessionMiddleware = session({
-  cookie: {
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
-    sameSite: isProduction ? 'none' : 'lax',
-    secure: isProduction,
-  },
-  resave: false,
-  saveUninitialized: false,
-  secret: env.SESSION_SECRET,
-  store: new PgSession({
-    createTableIfMissing: true,
-    pool: pgPool,
-    tableName: 'session',
-  }),
-})
+	cookie: {
+		httpOnly: true,
+		maxAge: 24 * 60 * 60 * 1000,
+		sameSite: isProduction ? "none" : "lax",
+		secure: isProduction,
+	},
+	resave: false,
+	saveUninitialized: false,
+	secret: env.SESSION_SECRET,
+	store: new PgSession({
+		createTableIfMissing: true,
+		pool: pgPool,
+		tableName: "session",
+	}),
+});

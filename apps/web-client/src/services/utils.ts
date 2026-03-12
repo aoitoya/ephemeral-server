@@ -22,13 +22,13 @@ export type ListResType<T> = ErrResType | ListOkResType<T>;
 export function handleApiErr(error: unknown): ErrResType {
 	console.log(error);
 
-	let status;
-	let code;
-	let message;
+	let status = 500;
+	let code = "";
+	let message = "Something went wrong";
 
 	if (error instanceof Error) {
 		if (error instanceof AxiosError) {
-			status = error.response?.status;
+			status = error.response?.status ?? status;
 
 			if (error.response?.data.code) {
 				code = error.response?.data.code;
@@ -42,9 +42,9 @@ export function handleApiErr(error: unknown): ErrResType {
 
 	return {
 		error: true,
-		status: status || 500,
-		code: code || "",
-		message: message || "Something went wrong",
+		status: status,
+		code: code,
+		message: message,
 	};
 }
 

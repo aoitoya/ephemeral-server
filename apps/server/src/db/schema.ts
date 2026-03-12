@@ -1,242 +1,218 @@
-import { relations, sql } from 'drizzle-orm'
+import { relations, sql } from "drizzle-orm";
 import {
-  AnyPgColumn,
-  boolean,
-  check,
-  integer,
-  json,
-  pgEnum,
-  pgTable,
-  primaryKey,
-  real,
-  text,
-  timestamp,
-  uuid,
-  varchar,
-} from 'drizzle-orm/pg-core'
+	type AnyPgColumn,
+	boolean,
+	check,
+	integer,
+	json,
+	pgEnum,
+	pgTable,
+	primaryKey,
+	real,
+	text,
+	timestamp,
+	uuid,
+	varchar,
+} from "drizzle-orm/pg-core";
 
-export const users = pgTable('users', {
-  createdAt: timestamp('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  id: uuid('id')
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  isOnline: boolean('is_online'),
-  lastOnline: timestamp('last_online'),
-  password: text('password').notNull(),
-  username: text('username').unique().notNull(),
-})
+export const users = pgTable("users", {
+	createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+	id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+	isOnline: boolean("is_online"),
+	lastOnline: timestamp("last_online"),
+	password: text("password").notNull(),
+	username: text("username").unique().notNull(),
+});
 
-export const connectionStatusTypeEnum = pgEnum('connection_status', [
-  'pending',
-  'active',
-  'blocked',
-  'cancelled',
-  'rejected',
-])
+export const connectionStatusTypeEnum = pgEnum("connection_status", [
+	"pending",
+	"active",
+	"blocked",
+	"cancelled",
+	"rejected",
+]);
 
-export const connections = pgTable('connections', {
-  acceptedAt: timestamp('accepted_at'),
-  blockedBy: uuid('blocked_by').references(() => users.id, {
-    onDelete: 'cascade',
-  }),
-  createdAt: timestamp('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  id: uuid('id')
-    .default(sql`gen_random_uuid()`)
-    .primaryKey(),
-  requestedBy: uuid('requested_by')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  status: connectionStatusTypeEnum('status')
-    .notNull()
-    .default(sql`'pending'::connection_status`),
+export const connections = pgTable("connections", {
+	acceptedAt: timestamp("accepted_at"),
+	blockedBy: uuid("blocked_by").references(() => users.id, {
+		onDelete: "cascade",
+	}),
+	createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+	id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
+	requestedBy: uuid("requested_by")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
+	status: connectionStatusTypeEnum("status")
+		.notNull()
+		.default(sql`'pending'::connection_status`),
 
-  userA: uuid('user_a')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  userB: uuid('user_b')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-})
+	userA: uuid("user_a")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
+	userB: uuid("user_b")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
+});
 
-export const posts = pgTable('posts', {
-  content: text('content').notNull(),
-  createdAt: timestamp('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  downvotes: integer('downvotes').notNull().default(0),
-  id: uuid('id')
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  isDead: boolean('is_dead').notNull().default(false),
-  life: real('life'),
-  mediaKey: text('media_key'),
-  nextScoreUpdate: timestamp('next_score_update'),
-  score: real('score'),
-  scoreUpdatedAt: timestamp('score_updated_at'),
-  topics: text('topics').array().notNull(),
-  upvotes: integer('upvotes').notNull().default(0),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-})
+export const posts = pgTable("posts", {
+	content: text("content").notNull(),
+	createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+	downvotes: integer("downvotes").notNull().default(0),
+	id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+	isDead: boolean("is_dead").notNull().default(false),
+	life: real("life"),
+	mediaKey: text("media_key"),
+	nextScoreUpdate: timestamp("next_score_update"),
+	score: real("score"),
+	scoreUpdatedAt: timestamp("score_updated_at"),
+	topics: text("topics").array().notNull(),
+	upvotes: integer("upvotes").notNull().default(0),
+	userId: uuid("user_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
+});
 
 export const comments = pgTable(
-  'comments',
-  {
-    commentId: uuid('comment_id').references((): AnyPgColumn => comments.id, {
-      onDelete: 'cascade',
-    }),
-    content: text('content').notNull(),
-    createdAt: timestamp('created_at')
-      .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
-    downvotes: integer('downvotes').notNull().default(0),
-    id: uuid('id')
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
-    postId: uuid('post_id').references(() => posts.id, { onDelete: 'cascade' }),
-    upvotes: integer('upvotes').notNull().default(0),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-  },
-  (table) => [
-    check(
-      'comments_post_xor_comment',
-      sql`((${table.postId} IS NULL) <> (${table.commentId} IS NULL))`
-    ),
-  ]
-)
+	"comments",
+	{
+		commentId: uuid("comment_id").references((): AnyPgColumn => comments.id, {
+			onDelete: "cascade",
+		}),
+		content: text("content").notNull(),
+		createdAt: timestamp("created_at")
+			.notNull()
+			.default(sql`CURRENT_TIMESTAMP`),
+		downvotes: integer("downvotes").notNull().default(0),
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		postId: uuid("post_id").references(() => posts.id, { onDelete: "cascade" }),
+		upvotes: integer("upvotes").notNull().default(0),
+		userId: uuid("user_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
+	},
+	(table) => [
+		check(
+			"comments_post_xor_comment",
+			sql`((${table.postId} IS NULL) <> (${table.commentId} IS NULL))`,
+		),
+	],
+);
 
-export const chatMessages = pgTable('chat_messages', {
-  content: text('content').notNull(),
-  createdAt: timestamp('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  id: uuid('id')
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  recipientId: uuid('recipient_id')
-    .notNull()
-    .references(() => users.id, {
-      onDelete: 'cascade',
-    }),
-  senderId: uuid('sender_id')
-    .notNull()
-    .references(() => users.id, {
-      onDelete: 'cascade',
-    }),
-})
+export const chatMessages = pgTable("chat_messages", {
+	content: text("content").notNull(),
+	createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+	id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+	recipientId: uuid("recipient_id")
+		.notNull()
+		.references(() => users.id, {
+			onDelete: "cascade",
+		}),
+	senderId: uuid("sender_id")
+		.notNull()
+		.references(() => users.id, {
+			onDelete: "cascade",
+		}),
+});
 
-export const notificationTypeEnum = pgEnum('notification_type', [
-  'connection:new-req',
-  'connection:req-approved',
-])
-export const notifications = pgTable('notifications', {
-  actorId: uuid('actor_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  id: uuid('id')
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  isRead: boolean('is_read').notNull().default(false),
-  type: notificationTypeEnum('type').notNull(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-})
+export const notificationTypeEnum = pgEnum("notification_type", [
+	"connection:new-req",
+	"connection:req-approved",
+]);
+export const notifications = pgTable("notifications", {
+	actorId: uuid("actor_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
+	createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+	id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+	isRead: boolean("is_read").notNull().default(false),
+	type: notificationTypeEnum("type").notNull(),
+	userId: uuid("user_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
+});
 
-export const voteTypeEnum = pgEnum('vote_type', ['upvote', 'downvote'])
+export const voteTypeEnum = pgEnum("vote_type", ["upvote", "downvote"]);
 
 export const votes = pgTable(
-  'votes',
-  {
-    commentId: uuid('comment_id').references(() => comments.id, {
-      onDelete: 'cascade',
-    }),
-    createdAt: timestamp('created_at')
-      .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
-    id: uuid('id')
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
-    postId: uuid('post_id').references(() => posts.id, { onDelete: 'cascade' }),
-    type: voteTypeEnum('type').notNull(),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-  },
-  (table) => [
-    check(
-      'votes_post_xor_comment',
-      sql`((${table.postId} IS NULL) <> (${table.commentId} IS NULL))`
-    ),
-  ]
-)
+	"votes",
+	{
+		commentId: uuid("comment_id").references(() => comments.id, {
+			onDelete: "cascade",
+		}),
+		createdAt: timestamp("created_at")
+			.notNull()
+			.default(sql`CURRENT_TIMESTAMP`),
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		postId: uuid("post_id").references(() => posts.id, { onDelete: "cascade" }),
+		type: voteTypeEnum("type").notNull(),
+		userId: uuid("user_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
+	},
+	(table) => [
+		check(
+			"votes_post_xor_comment",
+			sql`((${table.postId} IS NULL) <> (${table.commentId} IS NULL))`,
+		),
+	],
+);
 
 export const engagementHourly = pgTable(
-  'engagement_hourly',
-  {
-    hour: timestamp('hour', { mode: 'date' }).notNull(),
-    points: integer('points').default(0).notNull(),
-    postId: uuid('content_id')
-      .notNull()
-      .references(() => posts.id),
-  },
-  (t) => [primaryKey({ columns: [t.postId, t.hour] })]
-)
+	"engagement_hourly",
+	{
+		hour: timestamp("hour", { mode: "date" }).notNull(),
+		points: integer("points").default(0).notNull(),
+		postId: uuid("content_id")
+			.notNull()
+			.references(() => posts.id),
+	},
+	(t) => [primaryKey({ columns: [t.postId, t.hour] })],
+);
 
-export const configs = pgTable('configs', {
-  key: text('key').primaryKey(),
-  value: text('value'),
-})
+export const configs = pgTable("configs", {
+	key: text("key").primaryKey(),
+	value: text("value"),
+});
 
-export const session = pgTable('session', {
-  expire: timestamp('expire'),
-  sess: json('sess'),
-  sid: varchar('sid').primaryKey(),
-})
+export const session = pgTable("session", {
+	expire: timestamp("expire"),
+	sess: json("sess"),
+	sid: varchar("sid").primaryKey(),
+});
 
 // Relations
 export const userRelations = relations(users, ({ many }) => ({
-  comments: many(comments),
-  posts: many(posts),
-}))
+	comments: many(comments),
+	posts: many(posts),
+}));
 
 export const postRelations = relations(posts, ({ many, one }) => ({
-  comments: many(comments),
-  user: one(users, {
-    fields: [posts.userId],
-    references: [users.id],
-  }),
-}))
+	comments: many(comments),
+	user: one(users, {
+		fields: [posts.userId],
+		references: [users.id],
+	}),
+}));
 
 export const commentRelations = relations(comments, ({ many, one }) => ({
-  comments: many(comments),
-  post: one(posts, {
-    fields: [comments.postId],
-    references: [posts.id],
-  }),
-  user: one(users, {
-    fields: [comments.userId],
-    references: [users.id],
-  }),
-}))
+	comments: many(comments),
+	post: one(posts, {
+		fields: [comments.postId],
+		references: [posts.id],
+	}),
+	user: one(users, {
+		fields: [comments.userId],
+		references: [users.id],
+	}),
+}));
 
-export type ChatMessage = typeof chatMessages.$inferSelect
-export type Connection = typeof connections.$inferSelect
-export type LoginUser = Pick<User, 'password' | 'username'>
-export type NewChatMessage = typeof chatMessages.$inferInsert
-export type NewConnection = typeof connections.$inferInsert
-export type NewPost = Omit<typeof posts.$inferInsert, 'createdAt' | 'id'>
-export type NewUser = Omit<typeof users.$inferInsert, 'createdAt' | 'id'>
-export type Post = typeof posts.$inferSelect
-export type User = typeof users.$inferSelect
-export type Vote = typeof votes.$inferSelect
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type Connection = typeof connections.$inferSelect;
+export type LoginUser = Pick<User, "password" | "username">;
+export type NewChatMessage = typeof chatMessages.$inferInsert;
+export type NewConnection = typeof connections.$inferInsert;
+export type NewPost = Omit<typeof posts.$inferInsert, "createdAt" | "id">;
+export type NewUser = Omit<typeof users.$inferInsert, "createdAt" | "id">;
+export type Post = typeof posts.$inferSelect;
+export type User = typeof users.$inferSelect;
+export type Vote = typeof votes.$inferSelect;

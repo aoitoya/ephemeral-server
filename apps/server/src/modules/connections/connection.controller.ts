@@ -1,98 +1,98 @@
-import { Request, Response } from 'express'
+import type { Request, Response } from "express";
 
-import { AuthenticationError } from '../../shared/errors/index.js'
-import { ConnectionService } from './connection.service.js'
-import { GetConnectionsQuery } from './connection.validation.js'
+import { AuthenticationError } from "../../shared/errors/index.js";
+import { ConnectionService } from "./connection.service.js";
+import type { GetConnectionsQuery } from "./connection.validation.js";
 
 class ConnectionController {
-  private connectionService: ConnectionService
+	private connectionService: ConnectionService;
 
-  constructor() {
-    this.connectionService = new ConnectionService()
-  }
+	constructor() {
+		this.connectionService = new ConnectionService();
+	}
 
-  actionConnection = async (req: Request, res: Response) => {
-    const { action, requestId } = req.body as {
-      action: 'accept' | 'reject'
-      requestId: string
-    }
-    const currentUser = req.session.user
+	actionConnection = async (req: Request, res: Response) => {
+		const { action, requestId } = req.body as {
+			action: "accept" | "reject";
+			requestId: string;
+		};
+		const currentUser = req.session.user;
 
-    if (!currentUser) {
-      throw new AuthenticationError('No user id found')
-    }
+		if (!currentUser) {
+			throw new AuthenticationError("No user id found");
+		}
 
-    await this.connectionService.respondToConnectionRequest(
-      requestId,
-      currentUser.id,
-      action
-    )
+		await this.connectionService.respondToConnectionRequest(
+			requestId,
+			currentUser.id,
+			action,
+		);
 
-    const message =
-      action === 'accept'
-        ? 'Connection request accepted'
-        : 'Connection request rejected'
+		const message =
+			action === "accept"
+				? "Connection request accepted"
+				: "Connection request rejected";
 
-    res.json({ message })
-  }
+		res.json({ message });
+	};
 
-  getConnections = async (req: Request, res: Response) => {
-    const { reqBy, status = 'active' } = req.query as GetConnectionsQuery
+	getConnections = async (req: Request, res: Response) => {
+		const { reqBy, status = "active" } = req.query as GetConnectionsQuery;
 
-    const currentUser = req.session.user
+		const currentUser = req.session.user;
 
-    if (!currentUser) {
-      throw new AuthenticationError('No user id found')
-    }
+		if (!currentUser) {
+			throw new AuthenticationError("No user id found");
+		}
 
-    const connections = await this.connectionService.getConnections(
-      currentUser.id,
-      status,
-      reqBy
-    )
+		const connections = await this.connectionService.getConnections(
+			currentUser.id,
+			status,
+			reqBy,
+		);
 
-    res.json(connections)
-  }
+		res.json(connections);
+	};
 
-  getOnlineConnections = async (req: Request, res: Response) => {
-    const currentUser = req.session.user
+	getOnlineConnections = async (req: Request, res: Response) => {
+		const currentUser = req.session.user;
 
-    if (!currentUser) {
-      throw new AuthenticationError('No user id found')
-    }
+		if (!currentUser) {
+			throw new AuthenticationError("No user id found");
+		}
 
-    const connections = await this.connectionService.getOnlineConnections(
-      currentUser.id
-    )
+		const connections = await this.connectionService.getOnlineConnections(
+			currentUser.id,
+		);
 
-    res.json(connections)
-  }
+		res.json(connections);
+	};
 
-  removeConnection = async (req: Request, res: Response) => {
-    const { connectionId } = req.params as { connectionId: string }
-    const currentUser = req.session.user
+	removeConnection = async (req: Request, res: Response) => {
+		const { connectionId } = req.params as { connectionId: string };
+		const currentUser = req.session.user;
 
-    if (!currentUser) {
-      throw new AuthenticationError('No user id found')
-    }
+		if (!currentUser) {
+			throw new AuthenticationError("No user id found");
+		}
 
-    await this.connectionService.removeConnection(connectionId, currentUser.id)
+		await this.connectionService.removeConnection(connectionId, currentUser.id);
 
-    res.json({ message: 'Connection removed successfully' })
-  }
+		res.json({ message: "Connection removed successfully" });
+	};
 
-  requestConnection = async (req: Request, res: Response) => {
-    const { recipientId } = req.body as { recipientId: string }
-    const currentUser = req.session.user
+	requestConnection = async (req: Request, res: Response) => {
+		const { recipientId } = req.body as { recipientId: string };
+		const currentUser = req.session.user;
 
-    if (!currentUser) {
-      throw new AuthenticationError('No user id found')
-    }
+		if (!currentUser) {
+			throw new AuthenticationError("No user id found");
+		}
 
-    await this.connectionService.requestConnection(recipientId, currentUser)
+		await this.connectionService.requestConnection(recipientId, currentUser);
 
-    res.status(201).json({ message: 'Connection request sent' })
-  }
+		res.status(201).json({ message: "Connection request sent" });
+	};
 }
 
-export default ConnectionController
+export default ConnectionController;

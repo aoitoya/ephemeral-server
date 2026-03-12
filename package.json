@@ -3,6 +3,7 @@
   "description": "",
   "scripts": {
     "dev": "turbo dev",
+    "check": "turbo check",
     "check-types": "turbo check-types",
     "ci": "turbo ci"
   },

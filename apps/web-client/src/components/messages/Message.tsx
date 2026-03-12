@@ -24,7 +24,7 @@ export default function Messages() {
 
 	useEffect(() => {
 		scrollToBottom();
-	}, [messages, scrollToBottom]);
+	}, [scrollToBottom]);
 
 	useEffect(() => {
 		const handleResize = () => {

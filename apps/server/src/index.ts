@@ -1,26 +1,26 @@
-import { createServer } from 'node:http'
+import { createServer } from "node:http";
 
-import app from './app.js'
-import env from './config/env.js'
-import logger from './config/logger.js'
-import MessageService from './modules/chatMessages/chatMessage.socket.js'
-import NotificationService from './modules/notifications/notification.socket.js'
-import { postScoreUpdateScheduler } from './services/background.service.js'
-import * as socket from './socket/socket.js'
+import app from "./app.js";
+import env from "./config/env.js";
+import logger from "./config/logger.js";
+import MessageService from "./modules/chatMessages/chatMessage.socket.js";
+import NotificationService from "./modules/notifications/notification.socket.js";
+import { postScoreUpdateScheduler } from "./services/background.service.js";
+import * as socket from "./socket/socket.js";
 
-const PORT = env.PORT
+const PORT = env.PORT;
 
-const server = createServer(app)
+const server = createServer(app);
 
-const io = socket.init(server)
+const io = socket.init(server);
 
-const messageService = new MessageService(io)
-messageService.init()
+const messageService = new MessageService(io);
+messageService.init();
 
-export const notificationService = new NotificationService(io)
+export const notificationService = new NotificationService(io);
 
-postScoreUpdateScheduler.start()
+postScoreUpdateScheduler.start();
 
 server.listen(PORT, () => {
-  logger.info('Server is running on port', PORT)
-})
+	logger.info("Server is running on port", PORT);
+});

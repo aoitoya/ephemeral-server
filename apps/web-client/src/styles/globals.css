@@ -162,16 +162,16 @@ html {
 /* Responsive utilities */
 @media (max-width: 768px) {
 	.hide-mobile {
-		display: none !important;
+		display: none;
 	}
 
 	.text-mobile-center {
-		text-align: center !important;
+		text-align: center;
 	}
 }
 
 @media (min-width: 769px) {
 	.hide-desktop {
-		display: none !important;
+		display: none;
 	}
 }

@@ -1,102 +1,104 @@
-import { avg, desc, eq, sql } from 'drizzle-orm'
-
-import logger from '../config/logger.js'
-import { db } from '../db/connection.js'
-import { configs, posts } from '../db/schema.js'
+import { avg, desc, eq, sql } from "drizzle-orm";
+import env from "../config/env.js";
+import logger from "../config/logger.js";
+import { db } from "../db/connection.js";
+import { configs, posts } from "../db/schema.js";
 
 class PostScoreUpdateScheduler {
-  private readonly AVERAGE_SCORE_UPDATE_INTERVAL = 24 * 60 * 60 * 1000
-  private averageScoreInterval: NodeJS.Timeout | null = null
-  private readonly ENGAGEMENT_UPDATE_INTERVAL = 10 * 1000
-  private engagementInterval: NodeJS.Timeout | null = null
-  private readonly TOP_POSTS_LIMIT = 1_000_000
+	private readonly AVERAGE_SCORE_UPDATE_INTERVAL = 24 * 60 * 60 * 1000;
+	private averageScoreInterval: NodeJS.Timeout | null = null;
+	private readonly ENGAGEMENT_UPDATE_INTERVAL = 10 * 1000;
+	private engagementInterval: NodeJS.Timeout | null = null;
+	private readonly TOP_POSTS_LIMIT = 1_000_000;
 
-  start() {
-    this.initializeAverageScore()
-    this.startAverageScoreUpdates()
-    this.startEngagementUpdates()
-  }
+	start() {
+		this.initializeAverageScore();
+		this.startAverageScoreUpdates();
+		this.startEngagementUpdates();
+	}
 
-  stop() {
-    if (this.engagementInterval) {
-      clearInterval(this.engagementInterval)
-      this.engagementInterval = null
-    }
-    if (this.averageScoreInterval) {
-      clearInterval(this.averageScoreInterval)
-      this.averageScoreInterval = null
-    }
-  }
+	stop() {
+		if (this.engagementInterval) {
+			clearInterval(this.engagementInterval);
+			this.engagementInterval = null;
+		}
+		if (this.averageScoreInterval) {
+			clearInterval(this.averageScoreInterval);
+			this.averageScoreInterval = null;
+		}
+	}
 
-  private handleError = (error: unknown) => {
-    logger.error('Background service error:', error)
-  }
+	private handleError = (error: unknown) => {
+		logger.error("Background service error:", error);
+	};
 
-  private initializeAverageScore() {
-    db.select()
-      .from(configs)
-      .where(eq(configs.key, 'AVG_SCORE'))
-      .then((res) => {
-        if (!res[0]) {
-          this.updateAverageScore().catch(this.handleError)
-        }
-      })
-      .catch(this.handleError)
-  }
+	private initializeAverageScore() {
+		db.select()
+			.from(configs)
+			.where(eq(configs.key, "AVG_SCORE"))
+			.then((res) => {
+				if (!res[0]) {
+					this.updateAverageScore().catch(this.handleError);
+				}
+			})
+			.catch(this.handleError);
+	}
 
-  private startAverageScoreUpdates() {
-    this.averageScoreInterval = setInterval(() => {
-      this.updateAverageScore().catch(this.handleError)
-    }, this.AVERAGE_SCORE_UPDATE_INTERVAL)
-  }
+	private startAverageScoreUpdates() {
+		this.averageScoreInterval = setInterval(() => {
+			this.updateAverageScore().catch(this.handleError);
+		}, this.AVERAGE_SCORE_UPDATE_INTERVAL);
+	}
 
-  private startEngagementUpdates() {
-    this.engagementInterval = setInterval(() => {
-      this.updatePostScore().catch(this.handleError)
-    }, this.ENGAGEMENT_UPDATE_INTERVAL)
-  }
+	private startEngagementUpdates() {
+		this.engagementInterval = setInterval(() => {
+			this.updatePostScore().catch(this.handleError);
+		}, this.ENGAGEMENT_UPDATE_INTERVAL);
+	}
 
-  private async updateAverageScore() {
-    try {
-      const avgScoreResult = await db
-        .select({
-          avgScore: avg(posts.score).as('avgScore'),
-        })
-        .from(
-          db
-            .select({ score: posts.score })
-            .from(posts)
-            .orderBy(desc(posts.score))
-            .limit(this.TOP_POSTS_LIMIT)
-            .as('topPosts')
-        )
+	private async updateAverageScore() {
+		try {
+			const avgScoreResult = await db
+				.select({
+					avgScore: avg(posts.score).as("avgScore"),
+				})
+				.from(
+					db
+						.select({ score: posts.score })
+						.from(posts)
+						.orderBy(desc(posts.score))
+						.limit(this.TOP_POSTS_LIMIT)
+						.as("topPosts"),
+				);
 
-      if (avgScoreResult.length === 0) {
-        logger.warn('No posts found for average score calculation')
-        return
-      }
+			if (avgScoreResult.length === 0) {
+				logger.warn("No posts found for average score calculation");
+				return;
+			}
 
-      await db
-        .update(configs)
-        .set({ value: avgScoreResult[0].avgScore })
-        .where(eq(configs.key, 'AVG_SCORE'))
-    } catch (error) {
-      logger.error('Error updating average score:', error)
-    }
-  }
+			await db
+				.update(configs)
+				.set({ value: avgScoreResult[0].avgScore })
+				.where(eq(configs.key, "AVG_SCORE"));
+		} catch (error) {
+			logger.error("Error updating average score:", error);
+		}
+	}
 
-  private async updatePostScore() {
-    try {
-      const result = await db.execute(sql`SELECT update_post_score()`)
-      if (result.rows.length === 0) {
-        logger.warn('No result from post score update')
-        return
-      }
-      logger.info('Post score updated:', result.rows[0])
-    } catch (error) {
-      logger.error('Failed to update post score:', error)
-    }
-  }
+	private async updatePostScore() {
+		try {
+			const result = await db.execute(sql`SELECT update_post_score()`);
+			if (result.rows.length === 0) {
+				logger.warn("No result from post score update");
+				return;
+			}
+			if (env.NODE_ENV === "production") {
+				logger.info("Post score updated:", result.rows[0]);
+			}
+		} catch (error) {
+			logger.error("Failed to update post score:", error);
+		}
+	}
 }
 
-export const postScoreUpdateScheduler = new PostScoreUpdateScheduler()
+export const postScoreUpdateScheduler = new PostScoreUpdateScheduler();

@@ -1,42 +1,42 @@
-import { Router } from 'express'
+import { Router } from "express";
 
-import { authenticateToken } from '../../middleware/auth.middleware.js'
-import { uploadImage } from '../../middleware/upload.middleware.js'
-import { validateRequestBody } from '../../middleware/validate.middleware.js'
-import PostController from './post.controller.js'
+import { authenticateToken } from "../../middleware/auth.middleware.js";
+import { uploadImage } from "../../middleware/upload.middleware.js";
+import { validateRequestBody } from "../../middleware/validate.middleware.js";
+import PostController from "./post.controller.js";
 import {
-  createCommentSchema,
-  createPostSchema,
-  createVoteSchema,
-} from './post.validation.js'
+	createCommentSchema,
+	createPostSchema,
+	createVoteSchema,
+} from "./post.validation.js";
 
-const postRouter = Router()
-const postController = new PostController()
-
-postRouter.post(
-  '/',
-  authenticateToken,
-  uploadImage.single('file'),
-  validateRequestBody(createPostSchema),
-  postController.createPost
-)
-
-postRouter.get('/', postController.getAll)
+const postRouter = Router();
+const postController = new PostController();
 
 postRouter.post(
-  '/comments',
-  authenticateToken,
-  validateRequestBody(createCommentSchema),
-  postController.createComment
-)
+	"/",
+	authenticateToken,
+	uploadImage.single("file"),
+	validateRequestBody(createPostSchema),
+	postController.createPost,
+);
 
-postRouter.get('/comments', postController.getComments)
+postRouter.get("/", postController.getAll);
 
 postRouter.post(
-  '/vote',
-  authenticateToken,
-  validateRequestBody(createVoteSchema),
-  postController.vote
-)
+	"/comments",
+	authenticateToken,
+	validateRequestBody(createCommentSchema),
+	postController.createComment,
+);
 
-export default postRouter
+postRouter.get("/comments", postController.getComments);
+
+postRouter.post(
+	"/vote",
+	authenticateToken,
+	validateRequestBody(createVoteSchema),
+	postController.vote,
+);
+
+export default postRouter;

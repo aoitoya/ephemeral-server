@@ -11,6 +11,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx --env-file .env src/db/seed.ts",
+    "check": "biome check",
     "check-types": "tsc --noEmit",
     "ci": "biome ci",
     "lint": "eslint .",
@@ -24,8 +25,9 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "src/**/*.{js,jsx,ts,tsx}": [],
-    "src/**/*.{json,yml,yaml,md}": []
+    "src/**/*.{js,jsx,ts,tsx,json}": [
+      "biome ci"
+    ]
   },
   "keywords": [],
   "author": "",

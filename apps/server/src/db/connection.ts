@@ -1,7 +1,7 @@
-import { drizzle } from 'drizzle-orm/node-postgres'
+import { drizzle } from "drizzle-orm/node-postgres";
 
-import env from '../config/env.js'
+import env from "../config/env.js";
 
-const dbUri = env.DATABASE_URL
+const dbUri = env.DATABASE_URL;
 
-export const db = drizzle(dbUri)
+export const db = drizzle(dbUri);

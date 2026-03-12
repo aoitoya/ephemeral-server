@@ -5,3 +5,4 @@ dist
 
 localhost.crt
 localhost.key
+src/routeTree.gen.ts

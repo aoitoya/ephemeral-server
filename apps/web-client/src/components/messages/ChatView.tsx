@@ -38,7 +38,7 @@ export default function ChatView({
 	useEffect(() => {
 		const ref = messagesEndRef || localRef;
 		ref.current?.scrollIntoView({ behavior: "smooth" });
-	}, [messages, messagesEndRef]);
+	}, [messagesEndRef]);
 
 	return (
 		<Box
@@ -106,9 +106,9 @@ export default function ChatView({
 						</Typography>
 					</Box>
 				) : (
-					messages.map((msg, idx) => (
+					messages.map((msg) => (
 						<MessageBubble
-							key={idx}
+							key={msg.id}
 							message={msg}
 							isOwnMessage={msg.from.id === currentUserId}
 						/>

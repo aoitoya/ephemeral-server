@@ -33,7 +33,7 @@ export function CreatePost({ onSubmit, isSubmitting }: CreatePostProps) {
 
 	const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
-		if (file && file.type.startsWith("image/")) {
+		if (file?.type.startsWith("image/")) {
 			setSelectedFile(file);
 			setPreviewUrl(URL.createObjectURL(file));
 		}

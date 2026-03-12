@@ -1,10 +1,10 @@
-import { Router } from 'express'
+import { Router } from "express";
 
-import { NotificationController } from './notification.controller.js'
+import { NotificationController } from "./notification.controller.js";
 
-const notificationRouter = Router()
-const notificationController = new NotificationController()
+const notificationRouter = Router();
+const notificationController = new NotificationController();
 
-notificationRouter.get('/', notificationController.getNotifications)
+notificationRouter.get("/", notificationController.getNotifications);
 
-export default notificationRouter
+export default notificationRouter;

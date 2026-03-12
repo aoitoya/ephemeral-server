@@ -1,14 +1,14 @@
 {
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*"],
-  "exclude": [
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "eslint.config.mts",
-    "drizzle.config.ts"
-  ]
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"outDir": "./dist",
+		"rootDir": "./src"
+	},
+	"include": ["src/**/*"],
+	"exclude": [
+		"**/*.test.ts",
+		"**/*.spec.ts",
+		"eslint.config.mts",
+		"drizzle.config.ts"
+	]
 }

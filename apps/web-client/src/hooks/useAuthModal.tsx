@@ -3,6 +3,7 @@ import {
 	type ReactNode,
 	useContext,
 	useEffect,
+	useRef,
 	useState,
 } from "react";
 import { AuthModal } from "@/components/auth/AuthModal";
@@ -33,9 +34,11 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
 		setIsAuthModalOpen(false);
 	};
 
+	const openAuthModalRef = useRef(openAuthModal);
+
 	useEffect(() => {
 		const handleUnauthorized = () => {
-			openAuthModal("login");
+			openAuthModalRef.current("login");
 		};
 		window.addEventListener("auth:unauthorized", handleUnauthorized);
 		return () =>
