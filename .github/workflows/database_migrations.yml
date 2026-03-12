@@ -28,6 +28,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Migrate
+        working-directory: apps/server
         run: pnpm db:migrate
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
