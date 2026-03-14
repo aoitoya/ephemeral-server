@@ -9,6 +9,12 @@ export const authenticateToken = (
 	res: Response,
 	next: NextFunction,
 ) => {
+	if (req.isBot) {
+		return res
+			.status(403)
+			.json({ code: "BOT_DETECTED", message: "Bots are not allowed" });
+	}
+
 	const sessionUser = (
 		req as ExpressRequest & {
 			session: { user?: { id: string; username: string } };

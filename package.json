@@ -3,7 +3,7 @@
   "description": "",
   "scripts": {
     "dev": "turbo dev",
-    "check": "turbo check",
+    "lint": "turbo lint",
     "check-types": "turbo check-types",
     "ci": "turbo ci",
     "prepare": "husky"

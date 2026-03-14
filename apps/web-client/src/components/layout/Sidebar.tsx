@@ -1,24 +1,24 @@
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
-import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import {
 	Box,
-	ListItemButton,
-	Typography,
-	useTheme,
+	Button,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
 	Divider,
+	ListItemButton,
 	Modal,
 	ModalDialog,
-	DialogTitle,
-	DialogContent,
-	DialogActions,
-	Button,
+	Typography,
+	useTheme,
 } from "@mui/joy";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { useCurrentUser, useLogout } from "@/hooks/useAuth";
 import { useState } from "react";
+import { useCurrentUser, useLogout } from "@/hooks/useAuth";
 
 interface NavItem {
 	to: string;

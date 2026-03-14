@@ -6,7 +6,7 @@
         "dist/**"
       ],
     },
-    "check": {},
+    "lint": {},
     "check-types": {
       "dependsOn": [
         "^check-types"

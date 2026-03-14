@@ -10,6 +10,7 @@ import { pinoHttp } from "pino-http";
 
 import env from "./config/env.js";
 import { authenticateToken } from "./middleware/auth.middleware.js";
+import botMiddleware from "./middleware/botDetection.middleware.js";
 import { globalLimiter } from "./middleware/rateLimit.middleware.js";
 import { sessionMiddleware } from "./middleware/session.middleware.js";
 import connectionRouter from "./modules/connections/connection.routes.js";
@@ -36,7 +37,7 @@ const corsOptions = {
 	origin: getCorsOrigins(),
 };
 
-let a = "";
+const a = "";
 console.log(a);
 
 app.use(
@@ -57,6 +58,8 @@ app.use(
 		}),
 	}),
 );
+
+app.use(botMiddleware);
 
 app.use(cors(corsOptions));
 app.use(

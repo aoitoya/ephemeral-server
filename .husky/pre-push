@@ -1,1 +1,1 @@
-pnpm run test:run
+pnpm --filter ephemeral-server test:run
