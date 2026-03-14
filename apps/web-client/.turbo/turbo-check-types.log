@@ -1,6 +1,0 @@
-
-
-> ephemeral-client@ check-types /home/toya/projects/ephemeral-server/apps/web-client
-> tsc --noEmit
-
-[41m[30m ELIFECYCLE [39m[49m [31mCommand failed.[39m

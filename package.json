@@ -5,13 +5,15 @@
     "dev": "turbo dev",
     "check": "turbo check",
     "check-types": "turbo check-types",
-    "ci": "turbo ci"
+    "ci": "turbo ci",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "Saptarshi Mula",
   "license": "ISC",
   "packageManager": "pnpm@10.16.0",
   "devDependencies": {
+    "husky": "^9.1.7",
     "turbo": "^2.8.14"
   }
 }

@@ -40,6 +40,13 @@ class UserController {
 			}
 		});
 
+		res.clearCookie("connect.sid", {
+			path: "/",
+			httpOnly: true,
+			sameSite: isProduction ? "none" : "lax",
+			secure: isProduction,
+		});
+
 		res.clearCookie("XSRF-TOKEN", { path: "/" });
 
 		res.status(200).json({ message: "Logged out successfully" });

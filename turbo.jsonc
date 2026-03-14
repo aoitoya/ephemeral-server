@@ -2,13 +2,21 @@
   "$schema": "https://turborepo.dev/schema.json",
   "tasks": {
     "build": {
-      "outputs": ["dist/**"],
+      "outputs": [
+        "dist/**"
+      ],
     },
     "check": {},
     "check-types": {
-      "dependsOn": ["^check-types"],
+      "dependsOn": [
+        "^check-types"
+      ],
     },
-    "ci": {},
+    "ci": {
+      "outputs": [
+        "**/.turbo/**"
+      ]
+    },
     "dev": {
       "persistent": true,
       "cache": false,

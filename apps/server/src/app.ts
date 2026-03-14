@@ -66,7 +66,8 @@ app.use(sessionMiddleware);
 app.use(express.json());
 app.use(cookieParser());
 
-const frontendPath = env.FRONTEND_DIST ?? path.join(process.cwd(), "frontend", "dist");
+const frontendPath =
+	env.FRONTEND_DIST ?? path.join(process.cwd(), "frontend", "dist");
 if (!fs.existsSync(frontendPath)) {
 	console.warn("frontend files not found");
 } else {

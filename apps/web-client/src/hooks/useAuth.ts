@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authAPI } from "@/services/api/auth.api";
 import type { User } from "@/services/api/user.api";
 import { userAPI } from "@/services/api/user.api";
-import { isLoggedIn } from "@/services/utils";
 
 export const authKeys = {
 	all: ["auth"] as const,
@@ -39,14 +38,13 @@ export const useLogout = () => {
 		mutationFn: authAPI.logout,
 		onSuccess: () => {
 			queryClient.removeQueries({ queryKey: authKeys.all });
-			localStorage.setItem("logged_in", "true");
+			localStorage.setItem("logged_in", "false");
 		},
 	});
 };
 
 export const useCurrentUser = () => {
 	return useQuery<User>({
-		enabled: isLoggedIn(),
 		queryKey: authKeys.user(),
 		queryFn: () => userAPI.getMe(),
 		retry: (failureCount, error: unknown) => {

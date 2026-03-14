@@ -6,7 +6,6 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { routeTree } from "./routeTree.gen";
 import "./styles/globals.css";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 // Create a new query client instance
 const queryClient = new QueryClient();
@@ -157,7 +156,6 @@ if (!rootElement.innerHTML) {
 					<CssBaseline />
 					<RouterProvider router={router} />
 				</CssVarsProvider>
-				<ReactQueryDevtools />
 			</QueryClientProvider>
 		</React.StrictMode>,
 	);
