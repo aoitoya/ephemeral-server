@@ -36,6 +36,9 @@ const corsOptions = {
 	origin: getCorsOrigins(),
 };
 
+let a = "";
+console.log(a);
+
 app.use(
 	pinoHttp({
 		logger: pino({

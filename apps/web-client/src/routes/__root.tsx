@@ -12,3 +12,6 @@ export const Route = createRootRoute({
 		</>
 	),
 });
+
+let a = "";
+console.log(a);
